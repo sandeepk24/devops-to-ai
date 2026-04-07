@@ -18,24 +18,6 @@ This isn't another list of tools to learn. It's a transformation path — seven 
 
 ---
 
-## The roadmap
-
-```
-Phase 00 — The Foundation              (Junior)          4–6 weeks
-    ↓
-Phase 01 — Core DevOps                 (Junior)          6–8 weeks
-    ↓
-Phase 02 — Cloud Native Operations     (Intermediate)    6–8 weeks
-    ↓
-Phase 03 — AI-Augmented DevOps         (Intermediate)    4–5 weeks   ← the turning point
-    ↓
-Phase 04 — MLOps & LLMOps             (Intermediate+)   6–8 weeks
-    ↓
-Phase 05 — AIOps & Autonomous Ops      (Advanced)        5–6 weeks
-    ↓
-Phase 06 — The Autonomous Engineer     (Expert)          Ongoing
-```
-
 Each phase builds directly on the previous one. Each phase ends with a **capstone project** that is portfolio-worthy — something you can demo at a job interview, not just describe.
 
 ---
