@@ -1,0 +1,30 @@
+settings:
+  report_format: html
+  report_dir: ./reports
+  log_file: ./logs/reporter.log
+  email:
+    enabled: false
+    smtp_host: smtp.gmail.com
+    smtp_port: 587
+    username: your@email.com
+    password: ""
+    to: alerts@yourteam.com
+
+thresholds:
+  cpu_percent: 80
+  disk_percent: 85
+  memory_percent: 90
+
+servers:
+  - name: web-01
+    host: 192.168.1.10
+    user: ubuntu
+    key_path: ~/.ssh/id_ed25519
+  - name: web-02
+    host: 192.168.1.11
+    user: ubuntu
+    key_path: ~/.ssh/id_ed25519
+  - name: db-01
+    host: 192.168.1.20
+    user: ubuntu
+    key_path: ~/.ssh/id_ed25519
