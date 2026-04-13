@@ -1,0 +1,153 @@
+version: "3.9"
+
+# Full observability stack for local development
+# Includes: 3 services + Prometheus + Grafana + Loki + Tempo + OTel Collector
+#
+# Usage:
+#   docker compose up -d
+#   open http://localhost:3000  (Grafana — admin/admin)
+#   open http://localhost:9090  (Prometheus)
+#   docker compose logs -f api-gateway
+
+networks:
+  observability:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  tempo_data:
+
+services:
+
+  # ── your services ─────────────────────────────────────────────────────────
+
+  api-gateway:
+    build: ./services/api-gateway
+    ports:
+      - "8000:8000"
+      - "8001:8001"   # metrics port
+    environment:
+      PAYMENTS_SERVICE_URL: http://payments-service:8000
+      USER_SERVICE_URL: http://user-service:8000
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: api-gateway
+    depends_on:
+      - payments-service
+      - user-service
+      - otel-collector
+    networks:
+      - observability
+
+  payments-service:
+    build: ./services/payments-service
+    ports:
+      - "8010:8000"
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: payments-service
+    depends_on:
+      - otel-collector
+    networks:
+      - observability
+
+  user-service:
+    build: ./services/user-service
+    ports:
+      - "8020:8000"
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: user-service
+    depends_on:
+      - otel-collector
+    networks:
+      - observability
+
+  # ── observability stack ────────────────────────────────────────────────────
+
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+    networks:
+      - observability
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - observability
+
+  loki:
+    image: grafana/loki:2.9.8
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./config/loki/loki.yml:/etc/loki/config.yml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/config.yml
+    networks:
+      - observability
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    volumes:
+      - ./config/promtail/promtail.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - observability
+
+  tempo:
+    image: grafana/tempo:2.4.2
+    ports:
+      - "3200:3200"
+      - "4317:4317"   # OTLP gRPC (used directly without collector for local dev)
+    volumes:
+      - ./config/tempo/tempo.yml:/etc/tempo/config.yml:ro
+      - tempo_data:/tmp/tempo
+    command: -config.file=/etc/tempo/config.yml
+    networks:
+      - observability
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.99.0
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Prometheus metrics for the collector itself
+    volumes:
+      - ./config/otel/otel-collector.yml:/etc/otel/config.yml:ro
+    command: --config=/etc/otel/config.yml
+    depends_on:
+      - tempo
+      - loki
+    networks:
+      - observability

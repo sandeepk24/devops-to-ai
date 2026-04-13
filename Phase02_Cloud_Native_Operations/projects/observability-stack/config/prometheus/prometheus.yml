@@ -1,0 +1,52 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []   # TODO: add alertmanager when you deploy it
+
+scrape_configs:
+
+  # Prometheus scrapes itself
+  - job_name: prometheus
+    static_configs:
+      - targets: [localhost:9090]
+
+  # Your three services
+  - job_name: api-gateway
+    static_configs:
+      - targets: [api-gateway:8001]
+    metrics_path: /metrics
+
+  - job_name: payments-service
+    static_configs:
+      - targets: [payments-service:8001]
+    metrics_path: /metrics
+
+  - job_name: user-service
+    static_configs:
+      - targets: [user-service:8001]
+    metrics_path: /metrics
+
+  # OTel Collector self-metrics
+  - job_name: otel-collector
+    static_configs:
+      - targets: [otel-collector:8888]
+
+  # TODO: when running on Kubernetes, replace static_configs with kubernetes_sd_configs:
+  # - job_name: kubernetes-pods
+  #   kubernetes_sd_configs:
+  #     - role: pod
+  #   relabel_configs:
+  #     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+  #       action: keep
+  #       regex: "true"
+  #     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+  #       action: replace
+  #       target_label: __metrics_path__
+  #       regex: (.+)
