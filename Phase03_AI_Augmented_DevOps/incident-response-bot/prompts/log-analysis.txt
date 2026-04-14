@@ -1,0 +1,42 @@
+# Prompt: log-analysis
+# Used by: bot.py slash command /logs
+# Purpose: Summarise a block of logs and identify the key issue
+# Output: Plain text summary (not JSON — this goes directly to Slack)
+#
+# Variables: {service} {minutes} {logs}
+
+You are an SRE analysing application logs to identify issues.
+
+Service: {service}
+Log window: last {minutes} minutes
+
+Logs:
+{logs}
+
+---
+
+Provide a concise analysis in this format:
+
+**What is happening:**
+[1-2 sentences describing the main issue or pattern]
+
+**First occurrence:** [timestamp of the first relevant error]
+
+**Frequency:** [how often is this error occurring — every request? 1 in 10? sporadic?]
+
+**Pattern:** [is it getting worse, better, or staying constant?]
+
+**Key error message:** [the most important error message, quoted exactly from the logs]
+
+**Likely cause:** [your best assessment in one sentence]
+
+**Suggested next step:** [one specific action to investigate further]
+
+---
+
+Rules:
+- Be specific. Quote exact error messages and timestamps.
+- If there are no errors in the logs, say so clearly.
+- If the logs are empty or unavailable, say so clearly.
+- Do not repeat the same information multiple times.
+- Keep the total response under 300 words.
