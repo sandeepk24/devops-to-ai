@@ -1,0 +1,4 @@
+{"question": "How do we roll back a bad model canary?", "expect_source_substr": "canary-rollback"}
+{"question": "What is continuous batching and why does it matter?", "expect_source_substr": "continuous-batching"}
+{"question": "What are the failure modes of RAG?", "expect_source_substr": "rag-ops"}
+{"question": "What example SLO should we use for TTFT?", "expect_source_substr": "llm-slos"}

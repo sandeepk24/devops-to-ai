@@ -17,23 +17,26 @@ import os
 import sys
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 RAG_URL = os.environ.get("RAG_URL", "http://localhost:8081").rstrip("/")
+GOLDEN_PATH = Path(
+    os.environ.get(
+        "GOLDEN_SET",
+        str(Path(__file__).resolve().parents[1] / "data" / "eval" / "golden_set.jsonl"),
+    )
+)
 
-GOLDEN = [
-    {
-        "question": "How do we roll back a bad model canary?",
-        "expect_source_substr": "canary-rollback",
-    },
-    {
-        "question": "What is continuous batching and why does it matter?",
-        "expect_source_substr": "continuous-batching",
-    },
-    {
-        "question": "What are the failure modes of RAG?",
-        "expect_source_substr": "rag-ops",
-    },
-]
+
+def load_golden(path: Path) -> list[dict]:
+    cases: list[dict] = []
+    with path.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            cases.append(json.loads(line))
+    return cases
 
 
 def post_json(url: str, payload: dict) -> dict:
@@ -49,6 +52,10 @@ def post_json(url: str, payload: dict) -> dict:
 
 
 def main() -> int:
+    if not GOLDEN_PATH.exists():
+        print(f"FAIL: golden set not found at {GOLDEN_PATH}", file=sys.stderr)
+        return 2
+
     # Ensure corpus is loaded.
     try:
         ingest = post_json(f"{RAG_URL}/v1/rag/ingest", {})
@@ -58,10 +65,11 @@ def main() -> int:
         return 2
 
     failures = 0
-    for case in GOLDEN:
+    for case in load_golden(GOLDEN_PATH):
         result = post_json(f"{RAG_URL}/v1/rag/query", {"question": case["question"]})
         sources = [s.get("source", "") for s in result.get("sources", [])]
-        ok = any(case["expect_source_substr"] in s for s in sources)
+        needle = case["expect_source_substr"]
+        ok = any(needle in s for s in sources)
         status = "PASS" if ok else "FAIL"
         print(f"{status}: {case['question']}")
         print(f"  sources={sources}")
