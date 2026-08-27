@@ -1,0 +1,33 @@
+groups:
+  - name: llm-gateway
+    rules:
+      - alert: LLMGatewayHighErrorRate
+        expr: |
+          sum(rate(llm_gateway_requests_total{status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(llm_gateway_requests_total[5m])), 1e-9) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "LLM gateway 5xx rate > 5%"
+          description: "Investigate upstream health, timeouts, and recent model/prompt changes."
+
+      - alert: LLMGatewayHighLatency
+        expr: |
+          histogram_quantile(0.99, sum(rate(llm_gateway_request_duration_seconds_bucket[5m])) by (le)) > 5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "LLM gateway p99 latency > 5s"
+          description: "Check queue depth, GPU saturation, and canary regressions."
+
+      - alert: LLMGatewayUpstreamDown
+        expr: llm_gateway_upstream_up{upstream="stable"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Stable inference upstream is down"
+          description: "Gateway /ready is failing. Check mock-inference or vLLM pods."
