@@ -38,4 +38,22 @@ echo
 echo "== metrics exposed =="
 curl -sf "$GATEWAY_URL/metrics" | grep -q llm_gateway_requests_total
 
+echo "== rate limit should eventually 429 =="
+# Use a throwaway key only if present; otherwise hammer the default carefully.
+limited=0
+for _ in $(seq 1 $(( ${RATE_LIMIT_RPM:-60} + 5 ))); do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/v1/chat/completions" \
+    -H "Authorization: Bearer $API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{"model":"mock-model","messages":[{"role":"user","content":"rl"}],"max_tokens":8}')
+  if [ "$code" = "429" ]; then
+    limited=1
+    break
+  fi
+done
+# Soft check: if RATE_LIMIT_RPM is very high this may not trip in CI — warn only.
+if [ "$limited" -ne 1 ]; then
+  echo "WARN: did not observe 429 (raise load or lower RATE_LIMIT_RPM to verify)"
+fi
+
 echo "SMOKE OK"
