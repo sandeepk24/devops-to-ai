@@ -351,3 +351,144 @@ Review them in PRs. Diff them. Roll them back like application config.
 - [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
 
 ---
+
+## Capstone project
+
+### LLM inference platform with RAG
+
+Build a production-shaped LLM platform you can demo: an OpenAI-compatible gateway in front of a model server, a RAG service backed by a vector database, and monitoring for the signals that matter. Interviewers care about this project because it proves you can *operate* AI infrastructure — not just call ChatGPT.
+
+---
+
+**Architecture:**
+
+```
+Client / curl / app
+        ↓
+  Inference Gateway (auth, rate limit, routing, metrics)
+        ↓                    ↓
+   vLLM (or mock)      RAG Service → Qdrant (vectors)
+        ↓                    ↓
+   completions          grounded answers + citations
+        ↓
+  Prometheus + Grafana dashboards
+```
+
+Starter code lives in `projects/llm-inference-platform/`. Use a real GPU + vLLM when you have one; otherwise run the included **mock inference backend** so you can complete every other part of the project on a laptop.
+
+---
+
+**Part 1 — Inference gateway**
+
+Build (or complete) the FastAPI gateway in `services/inference-gateway/`:
+
+- [ ] Expose `POST /v1/chat/completions` (OpenAI-compatible request/response shape)
+- [ ] Proxy to an upstream inference URL (`INFERENCE_URL`)
+- [ ] Add a simple API key check (`Authorization: Bearer ...`)
+- [ ] Enforce a per-key rate limit (requests / minute)
+- [ ] Emit Prometheus metrics: request count, latency histogram, token counts (if present), errors
+- [ ] Support a `X-Model-Version` header for canary routing to a secondary upstream
+
+---
+
+**Part 2 — Model serving**
+
+- [ ] Document how to run vLLM with a small instruct model (or the mock server for CPU-only)
+- [ ] Verify `curl` against the gateway returns a completion
+- [ ] Record baseline TTFT and tokens/sec for three representative prompts
+- [ ] Add a `/health` and `/ready` endpoint on the gateway that fails when upstream is down
+
+---
+
+**Part 3 — RAG service**
+
+Build the RAG service in `services/rag-service/`:
+
+- [ ] Ingest a small corpus of ops docs (runbooks / README snippets) into Qdrant
+- [ ] Chunk + embed documents (sentence-transformers or an embedding API)
+- [ ] `POST /v1/rag/query` — retrieve top-k chunks, call the gateway, return answer + sources
+- [ ] Version the RAG system prompt under `prompts/`
+- [ ] Handle empty retrieval gracefully ("I don't have enough context…")
+
+---
+
+**Part 4 — Observability**
+
+- [ ] Docker Compose (or k8s) wiring for Prometheus + Grafana
+- [ ] Dashboard panels for: RPS, error rate, latency p99, (optional) GPU util
+- [ ] Alert rule stubs: high error rate, high p99 latency, upstream unhealthy
+- [ ] Structured JSON logs for every gateway request (redact auth headers)
+
+---
+
+**Part 5 — Rollout practice**
+
+- [ ] Run two upstreams (`stable` + `canary`) behind the gateway
+- [ ] Send ~10% of traffic to canary via header or percentage split
+- [ ] Compare latency and a tiny offline eval set before promoting canary
+- [ ] Document the rollback steps in the project README
+
+---
+
+**Definition of done:**
+
+- [ ] `curl` to the gateway returns a chat completion through the configured upstream
+- [ ] RAG query returns an answer that cites at least one retrieved source
+- [ ] Grafana (or Prometheus UI) shows live request metrics from the gateway
+- [ ] Rate limiting rejects excess requests with HTTP 429
+- [ ] Upstream failure surfaces as gateway 502/503 without crashing the process
+- [ ] Prompts live in `prompts/` as version-controlled text files
+- [ ] Project `README.md` explains CPU-only (mock) and GPU (vLLM) paths
+
+**Stretch goals:**
+- Add OpenTelemetry traces spanning gateway → RAG → inference
+- Shadow traffic to canary and log output diffs without serving them
+- Per-tenant quotas and a simple cost estimator (tokens × price)
+- Kubernetes manifests with a GPU node selector for the vLLM Deployment
+
+---
+
+## How to know you're ready for Phase 05
+
+Do not move on until you can do all of the following:
+
+- Explain prefill vs decode and why TTFT and tokens/sec are both required metrics
+- Serve (or mock-serve) an OpenAI-compatible chat API and put a gateway in front of it
+- Describe when to use RAG vs fine-tuning in plain language
+- Sketch how you would canary a new model version and what would make you roll back
+- Name at least five metrics you would put on an LLM platform dashboard
+- Explain why prompts and model artifacts must be versioned like application code
+- Reason about GPU VRAM as a capacity constraint (even if you only used the mock backend)
+
+Phase 05 assumes you can run AI workloads as services. If the gateway/RAG stack still feels magical, stay here longer.
+
+---
+
+## Resources summary
+
+| Resource | Type | Cost | Link |
+|---|---|---|---|
+| vLLM docs | Docs | Free | [docs.vllm.ai](https://docs.vllm.ai/en/latest/) |
+| Hugging Face Hub | Docs | Free | [huggingface.co/docs/hub](https://huggingface.co/docs/hub/index) |
+| MLflow Model Registry | Docs | Free | [mlflow.org](https://mlflow.org/docs/latest/model-registry.html) |
+| Qdrant docs | Docs | Free | [qdrant.tech/documentation](https://qdrant.tech/documentation/) |
+| LangChain RAG tutorial | Tutorial | Free | [python.langchain.com](https://python.langchain.com/docs/tutorials/rag/) |
+| NVIDIA k8s device plugin | Docs | Free | [github.com/NVIDIA/k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin) |
+| OTel GenAI conventions | Spec | Free | [opentelemetry.io](https://opentelemetry.io/docs/specs/semconv/gen-ai/) |
+| OWASP LLM Top 10 | Guide | Free | [owasp.org](https://owasp.org/www-project-top-10-for-large-language-model-applications/) |
+| HELM evaluation | Research | Free | [crfm.stanford.edu/helm](https://crfm.stanford.edu/helm/) |
+| PagedAttention paper | Paper | Free | [arxiv.org/abs/2309.06180](https://arxiv.org/abs/2309.06180) |
+
+---
+
+## Community & tracking
+
+Open an issue with `[Phase 04] Starting` when you begin and `[Phase 04] Done` when you complete the capstone. When you post Done, share:
+- A screenshot of your Grafana (or Prometheus) LLM dashboard
+- A sample RAG answer with citations
+- Whether you ran real vLLM or the mock backend
+- One capacity or cost lesson that surprised you
+
+---
+
+*← [Phase 03 — AI-Augmented DevOps](../Phase03_AI_Augmented_DevOps/README.md) | [Phase 05 — AIOps & Autonomous Operations →](../Phase05_AIOps_Autonomous_Operations/README.md)*
