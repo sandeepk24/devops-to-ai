@@ -245,3 +245,109 @@ Always leave headroom. A GPU at 100% utilisation means queueing and exploding TT
 - [vLLM performance tuning](https://docs.vllm.ai/en/latest/performance/)
 
 ---
+
+### 6. Model monitoring and LLM observability
+
+Prometheus golden signals still apply — but LLMs need extra dimensions. A 200 OK that returns nonsense is still a failure from the user's perspective.
+
+**Metrics you must track:**
+
+| Metric | Why it matters |
+|---|---|
+| Request rate | Traffic / capacity planning |
+| Error rate (4xx/5xx + model errors) | Reliability |
+| Time to first token (TTFT) | Perceived latency |
+| Tokens/sec (throughput) | Cost and capacity |
+| End-to-end latency | SLO compliance |
+| GPU utilisation / VRAM | Waste and saturation |
+| Queue depth | Backpressure early warning |
+| Cost per 1k tokens (est.) | Budget control |
+
+**Quality signals (harder, still required):**
+- Retrieval hit-rate / relevance scores for RAG
+- Refusal rate and safety filter triggers
+- User feedback (👍/👎) as a weak label
+- Offline eval suites run on every model/prompt change
+
+**What to cover:**
+
+- Exporting metrics from vLLM / gateway (Prometheus `/metrics`)
+- Tracing a request across gateway → retriever → LLM with OpenTelemetry
+- Logging prompts and completions safely — PII redaction, retention limits, access control
+- Alerting on TTFT and queue depth, not just HTTP errors
+- Distinguishing infrastructure failure from model quality regression
+
+**Dashboard layout that actually helps:**
+
+```
+┌──────────────────────┬──────────────────────┐
+│  Requests / sec      │  Error rate          │
+├──────────────────────┼──────────────────────┤
+│  TTFT p50 / p99      │  Tokens / sec        │
+├──────────────────────┼──────────────────────┤
+│  GPU util + VRAM     │  Queue depth         │
+└──────────────────────┴──────────────────────┘
+```
+
+**Recommended resources:**
+- [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
+- [vLLM metrics](https://docs.vllm.ai/en/latest/serving/metrics.html)
+- [LangSmith](https://docs.smith.langchain.com/) / [Phoenix (Arize)](https://docs.arize.com/phoenix) — LLM tracing & eval UIs
+
+---
+
+### 7. LLM deployment patterns
+
+Shipping a new model version is not the same as shipping a new container image. Behaviour can change subtly even when the API shape stays identical.
+
+**Patterns to know:**
+
+```
+Blue / green     Two full stacks; flip traffic at the gateway
+Canary           Send 5–10% of traffic to the new model; compare quality + latency
+Shadow           New model sees live traffic but responses are discarded (compare offline)
+A/B              Explicit experiment with user assignment and metrics
+```
+
+**What to cover:**
+
+- Gateway-level routing by `model` name or header (`X-Model-Version`)
+- Keeping prompt templates versioned alongside model versions
+- Rollback criteria — not just error rate: TTFT regression, elevated refusals, eval score drop
+- Multi-model serving — one gateway, many backends (cheap model for classification, large model for reasoning)
+- Feature flags for prompts — change behaviour without redeploying the inference pod
+
+**Rule of thumb:** Never swap production model weights without a canary or shadow period. "It looked fine on three test prompts" is not an evaluation strategy.
+
+---
+
+### 8. Evaluation, prompts as code, and safety
+
+If you can't measure quality, you can't safely change anything.
+
+**What to cover:**
+
+- Offline evaluation sets — golden questions with expected behaviours
+- LLM-as-judge — useful but biased; always sample-check with humans
+- Prompt versioning — store prompts in Git, not Slack; tag releases
+- Guardrails — input/output filters, PII scrubbing, tool-use allowlists
+- Prompt injection & data exfiltration — especially when RAG indexes untrusted docs
+- Cost controls — max tokens, per-tenant quotas, cheaper model fallbacks
+
+**Prompts are code:**
+
+```
+prompts/
+  system/v3_ops_assistant.txt
+  rag/v2_grounded_answer.txt
+  eval/golden_set.jsonl
+```
+
+Review them in PRs. Diff them. Roll them back like application config.
+
+**Recommended resources:**
+- [HELM (Stanford)](https://crfm.stanford.edu/helm/) — holistic evaluation of language models
+- [OpenAI evals](https://github.com/openai/evals)
+- [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+
+---
