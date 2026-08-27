@@ -1,0 +1,101 @@
+# Phase 04 — LLM inference platform (CPU-friendly default with mock inference)
+# Uncomment the vllm service when you have an NVIDIA GPU.
+
+services:
+  mock-inference:
+    build: ./services/mock-inference
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  inference-gateway:
+    build: ./services/inference-gateway
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    env_file: .env
+    environment:
+      INFERENCE_URL: ${INFERENCE_URL:-http://mock-inference:8000}
+      CANARY_INFERENCE_URL: ${CANARY_INFERENCE_URL:-http://mock-inference:8000}
+      API_KEYS: ${API_KEYS:-dev-key}
+      RATE_LIMIT_RPM: ${RATE_LIMIT_RPM:-60}
+      CANARY_PERCENT: ${CANARY_PERCENT:-10}
+    depends_on:
+      mock-inference:
+        condition: service_healthy
+
+  rag-service:
+    build: ./services/rag-service
+    ports:
+      - "${RAG_PORT:-8081}:8081"
+    env_file: .env
+    environment:
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      GATEWAY_URL: ${GATEWAY_URL:-http://inference-gateway:8080}
+      GATEWAY_API_KEY: ${API_KEYS:-dev-key}
+      TOP_K: ${TOP_K:-4}
+      CORPUS_DIR: /data/corpus
+    volumes:
+      - ./data/corpus:/data/corpus:ro
+      - ./prompts:/prompts:ro
+    depends_on:
+      - qdrant
+      - inference-gateway
+
+  qdrant:
+    image: qdrant/qdrant:v1.13.2
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - inference-gateway
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+  # --- GPU path (uncomment when ready) ---
+  # vllm:
+  #   image: vllm/vllm-openai:latest
+  #   runtime: nvidia
+  #   environment:
+  #     HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:-}
+  #   command:
+  #     - --model
+  #     - ${VLLM_MODEL:-mistralai/Mistral-7B-Instruct-v0.3}
+  #     - --max-model-len
+  #     - "8192"
+  #   ports:
+  #     - "8000:8000"
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+
+volumes:
+  qdrant_data:
