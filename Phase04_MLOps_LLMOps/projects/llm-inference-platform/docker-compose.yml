@@ -35,9 +35,10 @@ services:
     environment:
       QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
       GATEWAY_URL: ${GATEWAY_URL:-http://inference-gateway:8080}
-      GATEWAY_API_KEY: ${API_KEYS:-dev-key}
+      GATEWAY_API_KEY: ${GATEWAY_API_KEY:-dev-key}
       TOP_K: ${TOP_K:-4}
       CORPUS_DIR: /data/corpus
+      PROMPTS_DIR: /prompts
     volumes:
       - ./data/corpus:/data/corpus:ro
       - ./prompts:/prompts:ro
