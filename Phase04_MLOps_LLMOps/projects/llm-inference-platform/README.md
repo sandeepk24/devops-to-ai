@@ -25,9 +25,11 @@ llm-inference-platform/
 ├── k8s/                       ← optional GPU Deployment sketches
 ├── scripts/
 │   ├── smoke_test.sh
-│   └── eval_rag.py
-└── data/
-    └── corpus/                ← sample ops docs for RAG ingest
+│   ├── eval_rag.py
+│   └── generate_load.sh
+├── data/
+│   ├── corpus/                ← sample ops docs for RAG ingest
+│   └── eval/golden_set.jsonl  ← retrieval eval cases
 ```
 
 ---
