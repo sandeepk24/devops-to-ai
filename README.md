@@ -2,7 +2,9 @@
 
 > A project-driven roadmap from Linux basics to AI-native infrastructure — with capstone projects you can demo in interviews, not just talk about.
 
-Most learning paths are tool lists. This one is a **career arc**: seven phases that build on each other, each ending in something real you ship.
+Most learning paths are tool lists. This one is a **career arc**: **seven phases (00–06)** that build on each other, each ending in something real you ship.
+
+**Available now:** Phases 00–04 · **Coming soon:** Phases 05–06 (teasers below)
 
 ```
 Phase 00  Linux, Bash, Python, Git     →  server health reporter
@@ -28,8 +30,10 @@ Phase 06  Autonomous engineer          →  (coming soon)
 | Working DevOps engineer, want observability & GitOps | [Phase 02 — Cloud Native Operations](./Phase02_Cloud_Native_Operations/README.md) |
 | Comfortable in prod, adding AI to your workflow | [Phase 03 — AI-Augmented DevOps](./Phase03_AI_Augmented_DevOps/README.md) |
 | Ready to **run** LLM workloads (not just call APIs) | [Phase 04 — MLOps & LLMOps](./Phase04_MLOps_LLMOps/README.md) |
+| Running LLM platforms, want self-healing & autonomous ops | [Phase 05 — AIOps](./Phase05_AIOps_Autonomous_Operations/README.md) 🔜 |
+| Building AI agents that operate infrastructure | [Phase 06 — Autonomous Engineer](./Phase06_The_Autonomous_Engineer/README.md) 🔜 |
 
-Each phase has a **self-check** at the top. If you pass it, skip ahead.
+Each phase has a **self-check** at the top. If you pass it, skip ahead. Phases 05–06 are not published yet — follow the teaser pages to see what's coming.
 
 ---
 
@@ -42,8 +46,35 @@ Each phase has a **self-check** at the top. If you pass it, skip ahead.
 | [02 — Cloud Native Ops](./Phase02_Cloud_Native_Operations/README.md) | Prometheus, Grafana, OTel, ArgoCD, SLOs | [Observability stack](./Phase02_Cloud_Native_Operations/projects/observability-stack/) | ✅ Available |
 | [03 — AI-Augmented DevOps](./Phase03_AI_Augmented_DevOps/README.md) | Prompt engineering, AI in CI, ChatOps | [Incident response bot](./Phase03_AI_Augmented_DevOps/projects/incident-response-bot/) | ✅ Available |
 | [04 — MLOps & LLMOps](./Phase04_MLOps_LLMOps/README.md) | vLLM, RAG, GPUs, model monitoring | [LLM inference platform](./Phase04_MLOps_LLMOps/projects/llm-inference-platform/) | ✅ Available |
-| 05 — AIOps & Autonomous Ops | Self-healing, anomaly detection, predictive scale | TBD | 🔜 Coming soon |
-| 06 — The Autonomous Engineer | AI agents as operators, intent-driven infra | TBD | 🔜 Coming soon |
+| [05 — AIOps & Autonomous Ops](./Phase05_AIOps_Autonomous_Operations/README.md) | Anomaly detection, self-healing operators, predictive scale | Self-healing service demo (planned) | 🔜 Teaser |
+| [06 — Autonomous Engineer](./Phase06_The_Autonomous_Engineer/README.md) | AI agents as operators, intent-driven infra | AI ops platform capstone (planned) | 🔜 Teaser |
+
+---
+
+## Coming soon — Phases 05 & 06
+
+Phases **05** and **06** finish the roadmap. Guides and starter projects are not written yet, but here is the arc:
+
+### [Phase 05 — AIOps & Autonomous Operations](./Phase05_AIOps_Autonomous_Operations/README.md)
+
+Infrastructure that **fixes itself** (with guardrails):
+
+- Anomaly detection on metrics and logs — fewer false alerts
+- Kubernetes operators and automated remediation (restart, scale, rollback)
+- Predictive autoscaling before traffic spikes hit
+- Autonomous incident lifecycle: detect → diagnose → act → verify → log
+- **Planned capstone:** self-healing deployment demo with Slack audit trail
+
+### [Phase 06 — The Autonomous Engineer](./Phase06_The_Autonomous_Engineer/README.md)
+
+The destination — **intent-driven infrastructure**:
+
+- Describe outcomes in plain language; agents propose and execute changes within policy
+- RAG over runbooks + metrics for grounded ops decisions
+- Human approval gates, eval harnesses, full audit logs
+- **Planned capstone:** minimal AI ops platform (ask → diagnose → gated action)
+
+Star the repo to get updates when these land.
 
 ---
 
@@ -104,6 +135,8 @@ devops-to-ai/
 ├── Phase02_Cloud_Native_Operations/   Observability + GitOps stack project
 ├── Phase03_AI_Augmented_DevOps/       AI incident bot + prompt cheatsheets
 ├── Phase04_MLOps_LLMOps/              LLM gateway, RAG, Grafana dashboards
+├── Phase05_AIOps_Autonomous_Operations/   🔜 teaser — self-healing ops
+├── Phase06_The_Autonomous_Engineer/       🔜 teaser — AI agents as operators
 ├── .github/ISSUE_TEMPLATE/      Progress tracking template
 └── LICENSE                      MIT
 ```
