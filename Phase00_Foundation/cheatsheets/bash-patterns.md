@@ -1,6 +1,7 @@
 # Bash scripting patterns
 
-Reusable patterns for writing reliable Bash scripts. Copy, adapt, use.
+**Use this when:** writing cron jobs, deploy scripts, CI steps, or wrappers around Python tools.  
+**Golden rule:** start every script with `set -euo pipefail` (see below).
 
 ---
 
