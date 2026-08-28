@@ -1,82 +1,131 @@
 # devops-to-ai
 
-> A structured, project-driven roadmap that takes you from zero Linux knowledge to building autonomous, AI-native infrastructure systems.
+> A project-driven roadmap from Linux basics to AI-native infrastructure — with capstone projects you can demo in interviews, not just talk about.
 
-This isn't another list of tools to learn. It's a transformation path — seven phases that mirror how the best infrastructure engineers actually evolve their careers, ending at a place most people don't even know exists yet: the **Autonomous Engineer**.
+Most learning paths are tool lists. This one is a **career arc**: seven phases that build on each other, each ending in something real you ship.
+
+```
+Phase 00  Linux, Bash, Python, Git     →  server health reporter
+Phase 01  Docker, K8s, Terraform, CI   →  full deployment pipeline
+Phase 02  Observability, GitOps, SRE   →  metrics + logs + traces stack
+Phase 03  AI in daily DevOps work      →  incident response bot
+Phase 04  Run LLMs as infrastructure   →  inference platform + RAG
+Phase 05  Self-healing ops             →  (coming soon)
+Phase 06  Autonomous engineer          →  (coming soon)
+```
+
+**Time:** ~9–14 months part-time, linear path  
+**Format:** Read the phase guide → use cheatsheets → build the capstone → open a progress issue
 
 ---
 
-## Who this is for
+## Start here
 
-| You are... | Start at... |
+| You are... | Start at |
 |---|---|
-| Completely new to DevOps / infrastructure | [Phase 00 — The Foundation](./Phase00_Foundation/README.md) |
-| Comfortable with Linux, starting to use cloud tools | [Phase 01 — Core DevOps](./Phase01_Core_DevOps/README.md) |
-| Working DevOps engineer, want to level up | [Phase 02 — Cloud Native Operations](./Phase02_Cloud_Native_Operations/README.md) |
-| Intermediate DevOps, curious about AI integration | [Phase 03 — AI-Augmented DevOps](./Phase03_AI_Augmented_DevOps/README.md) |
-| Ready to run ML/LLM workloads as infrastructure | [Phase 04 — MLOps & LLMOps](./Phase04_MLOps_LLMOps/README.md) |
+| New to Linux / servers | [Phase 00 — The Foundation](./Phase00_Foundation/README.md) |
+| Know Linux, learning cloud & containers | [Phase 01 — Core DevOps](./Phase01_Core_DevOps/README.md) |
+| Working DevOps engineer, want observability & GitOps | [Phase 02 — Cloud Native Operations](./Phase02_Cloud_Native_Operations/README.md) |
+| Comfortable in prod, adding AI to your workflow | [Phase 03 — AI-Augmented DevOps](./Phase03_AI_Augmented_DevOps/README.md) |
+| Ready to **run** LLM workloads (not just call APIs) | [Phase 04 — MLOps & LLMOps](./Phase04_MLOps_LLMOps/README.md) |
+
+Each phase has a **self-check** at the top. If you pass it, skip ahead.
 
 ---
 
-Each phase builds directly on the previous one. Each phase ends with a **capstone project** that is portfolio-worthy — something you can demo at a job interview, not just describe.
+## Phases at a glance
+
+| Phase | Focus | Capstone project | Status |
+|---|---|---|---|
+| [00 — Foundation](./Phase00_Foundation/README.md) | Linux, Bash, Python, Git, networking, SSH | [Server health reporter](./Phase00_Foundation/projects/server-health-reporter/) | ✅ Available |
+| [01 — Core DevOps](./Phase01_Core_DevOps/README.md) | Docker, Kubernetes, Terraform, CI/CD | Full CI/CD pipeline for a microservice | ✅ Available |
+| [02 — Cloud Native Ops](./Phase02_Cloud_Native_Operations/README.md) | Prometheus, Grafana, OTel, ArgoCD, SLOs | [Observability stack](./Phase02_Cloud_Native_Operations/projects/observability-stack/) | ✅ Available |
+| [03 — AI-Augmented DevOps](./Phase03_AI_Augmented_DevOps/README.md) | Prompt engineering, AI in CI, ChatOps | [Incident response bot](./Phase03_AI_Augmented_DevOps/projects/incident-response-bot/) | ✅ Available |
+| [04 — MLOps & LLMOps](./Phase04_MLOps_LLMOps/README.md) | vLLM, RAG, GPUs, model monitoring | [LLM inference platform](./Phase04_MLOps_LLMOps/projects/llm-inference-platform/) | ✅ Available |
+| 05 — AIOps & Autonomous Ops | Self-healing, anomaly detection, predictive scale | TBD | 🔜 Coming soon |
+| 06 — The Autonomous Engineer | AI agents as operators, intent-driven infra | TBD | 🔜 Coming soon |
 
 ---
 
-## Phase overview
+## What's in each phase
 
-### [Phase 00 — The Foundation](./Phase00_Foundation/README.md)
-Linux, Bash, Python, Git internals, networking fundamentals, SSH and TLS. The non-negotiable base layer. You cannot automate what you don't understand manually.
+Every available phase follows the same shape:
 
-### [Phase 01 — Core DevOps](./Phase01_Core_DevOps/README.md)
-CI/CD pipelines, Docker, Kubernetes, Terraform. The toolkit every DevOps engineer uses every day. Build a production-grade deployment pipeline from scratch.
+```
+PhaseXX/
+├── README.md           ← learning guide + objectives + capstone spec
+├── cheatsheets/        ← quick references (where applicable)
+└── projects/           ← starter code for the capstone (where applicable)
+```
 
-### [Phase 02 — Cloud Native Operations](./Phase02_Cloud_Native_Operations/README.md)
-Cloud platforms, observability (Prometheus, Grafana, OpenTelemetry), GitOps with ArgoCD, SRE principles and error budgets.
+**You get:**
+- Clear learning objectives and a "ready for next phase" checklist
+- Curated resources (books, docs, tools)
+- Capstone projects with starter code, TODOs, and a definition of done
 
-### [Phase 03 — AI-Augmented DevOps](./Phase03_AI_Augmented_DevOps/README.md)
-The turning point. AI as a force multiplier: AI-assisted pipelines, LLM-powered incident response, ChatOps bots, prompt engineering for infrastructure tasks.
-
-### [Phase 04 — MLOps & LLMOps](./Phase04_MLOps_LLMOps/README.md)
-Running AI workloads as infrastructure. Model serving with vLLM, vector databases, GPU provisioning, model monitoring, LLM deployment patterns.
-
-### [Phase 05 — AIOps & Autonomous Operations](./Phase05_AIOps_Autonomous_Operations/README.md)
-Infrastructure that thinks. Self-healing Kubernetes operators, anomaly detection, predictive autoscaling, autonomous incident lifecycle.
-
-### [Phase 06 — The Autonomous Engineer](./Phase06_The_Autonomous_Engineer/README.md)
-The destination. Intent-driven infrastructure, AI agents as operators, designing feedback loops, building your own AI ops platform.
+**You build:**
+- Portfolio pieces — bots, pipelines, observability stacks, LLM platforms
+- Muscle memory for the terminal, Git, and automation
 
 ---
 
 ## How to use this repo
 
-**Option A — Follow it linearly.** Start at Phase 00, complete the capstone project, open a `[Phase Done]` issue, then move to the next phase. Estimated total: 9–14 months working part-time.
+**Linear (recommended for beginners)**  
+Start at Phase 00. Finish the capstone. Open a `[Phase 00] Done` issue. Move to Phase 01. Repeat.
 
-**Option B — Jump to your level.** Use the table above to find your entry point. Each phase has a self-assessment checklist — if you can check everything off without doing the work, you're ready to skip.
+**Jump in at your level**  
+Use the table above. Each phase README starts with a self-check — pass it, skip the phase.
 
-**Option C — Use it as a reference.** Star the repo and come back to specific phases when you need a structured approach to a new topic.
+**Reference mode**  
+Star the repo. Come back to a specific phase or cheatsheet when you need structure for a new topic.
 
 ---
 
-## Tracking your progress
+## Track your progress
 
-Open a GitHub Issue with the format `[Phase XX] Starting — <your name/handle>` when you begin a phase. Change it to `[Phase XX] Done` when you complete the capstone. This keeps you accountable and lets others at the same phase find you.
+Open a GitHub issue when you start and finish a phase:
+
+```
+[Phase 00] Starting — your-handle
+[Phase 00] Done — your-handle
+```
+
+Use the [progress issue template](./.github/ISSUE_TEMPLATE/progress.md). When you mark Done, link your capstone repo or a screenshot — it helps others at the same stage find you.
+
+---
+
+## Repo map
+
+```
+devops-to-ai/
+├── Phase00_Foundation/          Linux, Bash, Git + server health reporter
+├── Phase01_Core_DevOps/         Docker, K8s, Terraform, CI/CD
+├── Phase02_Cloud_Native_Operations/   Observability + GitOps stack project
+├── Phase03_AI_Augmented_DevOps/       AI incident bot + prompt cheatsheets
+├── Phase04_MLOps_LLMOps/              LLM gateway, RAG, Grafana dashboards
+├── .github/ISSUE_TEMPLATE/      Progress tracking template
+└── LICENSE                      MIT
+```
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). Contributions welcome — especially improved projects, additional resources, and corrections. This roadmap is opinionated by design; open an issue to discuss before making structural changes.
+Issues and PRs welcome — especially capstone improvements, new cheatsheets, and corrections.
+
+This roadmap is opinionated by design. Open an issue before large structural changes.
 
 ---
 
-## Author
+## License
 
-Built by someone on the path from DevOps engineer to autonomous infrastructure architect. Every phase reflects real experience, real mistakes, and real lessons.
-
-If this helps you, star the repo. If you complete a phase, open an issue. If you land a job using this roadmap, that's the only metric that matters.
+[MIT](./LICENSE)
 
 ---
 
 <p align="center">
-  <a href="./Phase00_Foundation/README.md">Start at Phase 00 →</a>
+  <a href="./Phase00_Foundation/README.md"><strong>Start Phase 00 →</strong></a>
+  &nbsp;·&nbsp;
+  <a href="./Phase04_MLOps_LLMOps/README.md">Jump to Phase 04 →</a>
 </p>
