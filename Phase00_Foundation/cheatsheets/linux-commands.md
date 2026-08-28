@@ -1,6 +1,21 @@
 # Linux commands cheatsheet
 
-Quick reference for the commands you'll use every day. Not exhaustive — focused on what actually matters in infrastructure work.
+**Use this on:** any Linux server, container shell, or CI job.  
+**How to use:** Ctrl+F for what you need. You do not need to memorise everything — know what exists and look it up.
+
+Quick daily commands:
+
+```bash
+pwd && ls -la              # where am I, what's here
+df -h && free -h           # disk and memory
+top  or  htop              # what's using CPU (q to quit)
+systemctl status nginx     # is the service running?
+journalctl -u nginx -f     # follow service logs
+tail -f /var/log/syslog    # follow a log file
+grep -r "error" /var/log/  # search logs
+ss -tuln                   # what's listening on which port
+curl -I https://example.com # quick HTTP check
+```
 
 ---
 
