@@ -1,6 +1,7 @@
 # Git commands cheatsheet
 
-Beyond `add`, `commit`, `push`. The commands you need to actually work with Git in a team.
+**Use this when:** working on infra repos, opening PRs, fixing merge conflicts, or cleaning up history.  
+**Daily trio:** `git status` → `git diff` → `git log --oneline -10`
 
 ---
 
