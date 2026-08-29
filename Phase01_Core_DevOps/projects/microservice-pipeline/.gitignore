@@ -1,0 +1,15 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+crash.log
+override.tf
+*_override.tf
+.venv/
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+.env
+*.pyc
+.DS_Store
