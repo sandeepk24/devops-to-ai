@@ -42,7 +42,7 @@ Each phase has a **self-check** at the top. If you pass it, skip ahead. Phases 0
 | Phase | Focus | Capstone project | Status |
 |---|---|---|---|
 | [00 — Foundation](./Phase00_Foundation/README.md) | Linux, Bash, Python, Git, networking, SSH | [Server health reporter](./Phase00_Foundation/projects/server-health-reporter/) | ✅ Available |
-| [01 — Core DevOps](./Phase01_Core_DevOps/README.md) | Docker, Kubernetes, Terraform, CI/CD | Full CI/CD pipeline for a microservice | ✅ Available |
+| [01 — Core DevOps](./Phase01_Core_DevOps/README.md) | Docker, Kubernetes, Terraform, CI/CD | [Microservice pipeline](./Phase01_Core_DevOps/projects/microservice-pipeline/) | ✅ Available |
 | [02 — Cloud Native Ops](./Phase02_Cloud_Native_Operations/README.md) | Prometheus, Grafana, OTel, ArgoCD, SLOs | [Observability stack](./Phase02_Cloud_Native_Operations/projects/observability-stack/) | ✅ Available |
 | [03 — AI-Augmented DevOps](./Phase03_AI_Augmented_DevOps/README.md) | Prompt engineering, AI in CI, ChatOps | [Incident response bot](./Phase03_AI_Augmented_DevOps/projects/incident-response-bot/) | ✅ Available |
 | [04 — MLOps & LLMOps](./Phase04_MLOps_LLMOps/README.md) | vLLM, RAG, GPUs, model monitoring | [LLM inference platform](./Phase04_MLOps_LLMOps/projects/llm-inference-platform/) | ✅ Available |
@@ -131,7 +131,7 @@ Use the [progress issue template](./.github/ISSUE_TEMPLATE/progress.md). When yo
 ```
 devops-to-ai/
 ├── Phase00_Foundation/          Linux, Bash, Git + server health reporter
-├── Phase01_Core_DevOps/         Docker, K8s, Terraform, CI/CD
+├── Phase01_Core_DevOps/         Docker, K8s, Terraform, CI/CD + microservice pipeline
 ├── Phase02_Cloud_Native_Operations/   Observability + GitOps stack project
 ├── Phase03_AI_Augmented_DevOps/       AI incident bot + prompt cheatsheets
 ├── Phase04_MLOps_LLMOps/              LLM gateway, RAG, Grafana dashboards
