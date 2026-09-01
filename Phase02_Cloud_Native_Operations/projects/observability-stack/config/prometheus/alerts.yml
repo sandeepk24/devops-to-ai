@@ -1,0 +1,35 @@
+groups:
+  - name: phase02-alerts
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum by (job) (rate(http_requests_total{status=~"5.."}[5m]))
+          /
+          clamp_min(sum by (job) (rate(http_requests_total[5m])), 1e-9) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High 5xx rate on {{ $labels.job }}"
+          description: "Error ratio above 5% for 5 minutes — check logs and recent deploys."
+
+      - alert: HighLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum by (le, job) (rate(http_request_duration_seconds_bucket[5m]))
+          ) > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High p99 latency on {{ $labels.job }}"
+          description: "p99 above 2s for 10 minutes — check traces for slow downstream calls."
+
+      - alert: TargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus target down: {{ $labels.job }}"
+          description: "Scrape failed — pod/container may be down or /metrics unreachable."
