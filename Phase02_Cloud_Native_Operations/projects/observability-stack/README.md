@@ -1,173 +1,123 @@
-# Project: Full observability stack
+# Capstone: Observability stack
 
-> Phase 02 capstone project — build this before moving to Phase 03.
+> **Phase 02 project** — finish this before [Phase 03](../../../Phase03_AI_Augmented_DevOps/README.md).  
+> Phase guide: [Phase 02 README](../../README.md)
 
-A three-service application fully instrumented with metrics, logs, and traces. Deployed locally with Docker Compose and to Kubernetes with Helm + ArgoCD.
+Three tiny services that simulate checkout (`api-gateway` → `user-service` + `payments-service`), wired into Prometheus, Grafana, Loki, and Tempo. Run it all on your laptop first. Kubernetes + ArgoCD come after you can explain a graph.
 
 ---
 
-## What's in this project
+## What's here
 
 ```
 observability-stack/
 ├── services/
-│   ├── api-gateway/          ← starter code provided (instrumented)
-│   ├── payments-service/     ← TODO: you build this
-│   └── user-service/         ← TODO: you build this
-├── config/
-│   ├── prometheus/           ← Prometheus config and alert rules
-│   ├── grafana/              ← Grafana provisioning (data sources, dashboards)
-│   ├── loki/                 ← Loki config
-│   ├── tempo/                ← Tempo config
-│   ├── promtail/             ← Promtail config
-│   └── otel/                 ← OpenTelemetry Collector config
-├── dashboards/               ← Grafana dashboard JSON files (export here)
-├── k8s/                      ← Kubernetes manifests
-│   ├── apps/                 ← Helm charts for your services
-│   └── argocd/               ← ArgoCD Application manifests
-└── docker-compose.yml        ← full stack for local development
+│   ├── api-gateway/       ← fully instrumented example (read this first)
+│   ├── payments-service/  ← slow + error simulation built in
+│   └── user-service/      ← ten fake users
+├── config/                ← prometheus, grafana, loki, tempo, otel, promtail
+├── dashboards/            ← export your Grafana JSON here
+├── scripts/               ← traffic generator
+├── k8s/                   ← ArgoCD notes (stretch)
+└── docker-compose.yml
 ```
 
 ---
 
-## Quick start (local)
+## Quick start (15 minutes)
 
 ```bash
-# 1. Start everything
-docker compose up -d
+cd Phase02_Cloud_Native_Operations/projects/observability-stack
 
-# 2. Check all services are healthy
-docker compose ps
+docker compose up --build -d
+docker compose ps          # everything should be running
 
-# 3. Open Grafana
-open http://localhost:3000
-# Login: admin / admin
+# UIs
+open http://localhost:3000   # Grafana — admin / admin
+open http://localhost:9090   # Prometheus
 
-# 4. Open Prometheus
-open http://localhost:9090
-
-# 5. Generate some traffic
-./scripts/generate-traffic.sh   # or run manually:
+# Smoke test checkout
 curl -X POST "http://localhost:8000/checkout?user_id=user-1&amount=49.99"
-curl -X POST "http://localhost:8000/checkout?user_id=user-2&amount=149.99"
+
+# Generate traffic (errors + slow payments on purpose)
+./scripts/generate-traffic.sh
 ```
+
+**Prometheus targets:** http://localhost:9090/targets — all three apps should be **UP**.
 
 ---
 
-## Your tasks
+## Your tasks (in order)
 
-Work through these in order. Each builds on the previous.
+### Part 1 — Read the code, then break things on purpose
 
-### Part 1 — Build the missing services
+- [ ] Read `services/api-gateway/main.py` — metrics middleware, tracing spans, JSON logs
+- [ ] Hit checkout with valid users (`user-1` … `user-10`) and invalid (`bad-user`)
+- [ ] Watch `payments-service` logs for `payment_slow_path` and `payment_failed`
+- [ ] Optional TODO: add readiness checks that call downstream services
 
-The `api-gateway` service is provided as a working example. Your job is to build `payments-service` and `user-service` following the same patterns.
+### Part 2 — Prometheus & PromQL
 
-**payments-service must:**
-- [ ] Expose `POST /payments` — accepts `{user_id, amount}`, returns `{payment_id, status}`
-- [ ] Have a `GET /payments/{payment_id}` endpoint
-- [ ] Expose `/metrics`, `/health`, `/ready` endpoints
-- [ ] Emit structured JSON logs for every payment attempt
-- [ ] Be instrumented with OpenTelemetry tracing
-- [ ] Simulate a slow path: 10% of requests take 2–5 seconds (to make latency alerts interesting)
-- [ ] Simulate errors: 2% of requests return 500 (to make error alerts interesting)
+- [ ] Confirm targets UP
+- [ ] In Prometheus UI, run:
+  - Request rate per service
+  - Error rate for `payments-service`
+  - p99 latency for `payments-service`
+- [ ] Open **Alerts** — rules from `config/prometheus/alerts.yml` (may need traffic to fire)
 
-**user-service must:**
-- [ ] Expose `GET /users/{user_id}` — returns `{user_id, name, email}` or 404
-- [ ] Have a hardcoded set of 10 test users (no database required)
-- [ ] Expose `/metrics`, `/health`, `/ready` endpoints
-- [ ] Emit structured JSON logs
-- [ ] Be instrumented with OpenTelemetry tracing
+### Part 3 — Grafana dashboards
 
-### Part 2 — Wire up Prometheus
+Build from scratch (don't just import):
 
-- [ ] Start the stack with `docker compose up -d`
-- [ ] Verify Prometheus is scraping all three services: go to `http://localhost:9090/targets`
-- [ ] All targets should show State: UP
-- [ ] Write and verify these PromQL queries in the Prometheus UI:
-  - Request rate for each service
-  - Error rate for payments-service
-  - p99 latency for payments-service
-  - Active requests across all services
+1. **Service health** — four golden signals, variable `$service`
+2. **Container health** — CPU/memory if you have cAdvisor (stretch) or app metrics
+3. **SLO panel** — payments error budget sketch (see [SLO cheatsheet](../../cheatsheets/slo-error-budgets.md))
 
-### Part 3 — Build Grafana dashboards
+Export each to `dashboards/` as JSON when done.
 
-In Grafana (`http://localhost:3000`), build these dashboards from scratch:
+### Part 4 — Logs in Loki
 
-**Dashboard 1 — Service health overview**
-- [ ] Four golden signals (traffic, errors, latency, saturation) for each service
-- [ ] Use dashboard variables so one dashboard works for all services: `$service`
-- [ ] Colour thresholds: green < 1%, yellow < 5%, red > 5% for error rate
+Grafana → Explore → Loki:
 
-**Dashboard 2 — Node / container health**
-- [ ] CPU usage per container
-- [ ] Memory usage per container
-- [ ] Network I/O per container
-
-**Dashboard 3 — SLO dashboard**
-- [ ] Current SLO compliance % for payments-service (target: 99.5%)
-- [ ] Error budget remaining (%)
-- [ ] Error budget burn rate (alert if > 14.4x)
-
-When you're happy with each dashboard, export it as JSON and save to `dashboards/`.
-
-### Part 4 — Set up Loki and verify logs
-
-- [ ] In Grafana, go to Explore → select Loki data source
-- [ ] Run: `{compose_service="payments-service"}` — you should see logs
-- [ ] Run: `{compose_service="payments-service"} | json | level="error"`
-- [ ] Build a log panel on your service dashboard showing recent errors
-
-### Part 5 — Verify traces in Tempo
-
-- [ ] Make a few checkout requests to generate traces
-- [ ] In Grafana → Explore → select Tempo data source
-- [ ] Search for traces from `api-gateway`
-- [ ] Click on a trace — you should see spans for api-gateway → payments-service and api-gateway → user-service
-- [ ] Find a slow trace (one where payments-service took > 1s) and identify which span was slow
-
-### Part 6 — Configure alerting
-
-Edit `config/prometheus/alerts.yml` and add these alert rules:
-- [ ] Error rate > 5% for 5 minutes → critical
-- [ ] p99 latency > 2 seconds for 10 minutes → warning
-- [ ] Error budget burn rate > 14.4x → critical
-
-Test your alerts:
-```bash
-# Trigger high error rate by hitting the error endpoint
-for i in {1..100}; do curl -s http://localhost:8000/checkout?user_id=bad-user&amount=1 ; done
-# Watch Prometheus → Alerts — your alert should go to PENDING then FIRING
+```logql
+{compose_service="payments-service"}
+{compose_service="payments-service"} | json | level="error"
 ```
 
-### Part 7 — Deploy to Kubernetes with ArgoCD
+Add a log panel to your service dashboard.
 
-- [ ] Install ArgoCD on your cluster (see `k8s/argocd/install.md`)
-- [ ] Create Helm charts for all three services under `k8s/apps/`
-- [ ] Create ArgoCD Application manifests under `k8s/argocd/`
-- [ ] Push everything to a Git repo
-- [ ] Verify ArgoCD detects and syncs all applications
-- [ ] Test self-healing: manually `kubectl edit` a deployment and watch ArgoCD revert it
+### Part 5 — Traces in Tempo
+
+- [ ] Run `./scripts/generate-traffic.sh`
+- [ ] Grafana → Explore → Tempo → search `api-gateway`
+- [ ] Open a slow trace — find the long `create_payment` span
+
+### Part 6 — Alerts
+
+- [ ] Read `config/prometheus/alerts.yml`
+- [ ] Generate errors: run traffic script or loop checkout with bad data
+- [ ] See alert go Pending → Firing in Prometheus → Alerts
+
+### Part 7 — Kubernetes + ArgoCD (stretch)
+
+See [k8s/argocd/install.md](./k8s/argocd/install.md). Only after local stack feels boring.
 
 ---
 
 ## Definition of done
 
-Before moving to Phase 03, you must be able to demonstrate:
-
-- [ ] All three services running and healthy
-- [ ] Prometheus targets all showing UP
-- [ ] At least one Grafana dashboard showing real data with all four golden signals
-- [ ] At least one end-to-end trace visible in Grafana Tempo
-- [ ] Loki showing logs from all services, filterable by level
-- [ ] At least 3 alert rules configured (verify with `promtool check rules`)
-- [ ] All dashboards exported to `dashboards/` as JSON files
-- [ ] ArgoCD managing all deployments in Kubernetes
+- [ ] `docker compose up` healthy
+- [ ] Prometheus scraping all services
+- [ ] Grafana dashboard with four golden signals (real data)
+- [ ] One end-to-end trace in Tempo
+- [ ] Loki logs filterable by service + level
+- [ ] ≥3 alert rules verified
+- [ ] Dashboard JSON committed under `dashboards/`
 
 ---
 
-## Sharing your work
+## When you finish
 
-When done, open a `[Phase 02] Done` issue on the devops-to-ai repo. Include:
-- A screenshot of your four golden signals dashboard
-- Your GitHub repo link
-- One thing that surprised you
+Open `[Phase 02] Done` on [devops-to-ai](https://github.com/sandeepk24/devops-to-ai) with a Grafana screenshot and repo link.
+
+→ [Phase 03 — AI-Augmented DevOps](../../../Phase03_AI_Augmented_DevOps/README.md)
