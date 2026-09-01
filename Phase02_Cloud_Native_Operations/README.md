@@ -2,516 +2,283 @@
 
 > **"Anyone can deploy an app. An engineer can tell you why it's slow at 2am without waking up."**
 >
-> Phase 01 got your app running. Phase 02 makes it observable, reliable, and automatically delivered. This is where you stop being someone who deploys things and start being someone who operates them. The difference between a junior and intermediate engineer is almost always observability — juniors wait for users to report problems, intermediates know about problems before users do.
+> Phase 01 got your app running. Phase 02 teaches you to **operate** it — metrics when something breaks, logs that explain what happened, traces that show where time went, and GitOps so deploys aren't a manual ritual.
 
 ---
 
-## What this phase is
+## Who this is for
 
-Cloud native operations is the discipline of running distributed systems in production. It means your application has eyes (metrics), ears (logs), and a nervous system (traces) so you always know what's happening inside it. It means deployments happen automatically through GitOps, not manually through humans. It means you define reliability targets and measure against them.
+| You are... | Do this |
+|---|---|
+| Finished Phase 01 (Docker, K8s, CI/CD basics) | Work through every topic, then the capstone |
+| Junior DevOps — deploy fine, debugging in prod is shaky | Focus on observability + SLOs, build the capstone locally first |
+| Already run Prometheus/Grafana/ArgoCD in production | Take the [self-check](#self-check--can-you-skip) — skip to Phase 03 if you pass |
 
-By the end of Phase 02, you will have built a complete observability stack from scratch — the kind of setup real engineering teams pay thousands of dollars a month for on hosted platforms.
+**Time:** 6–8 weeks part-time  
+**Goal:** Know when your system is unhealthy **before** users tell you, and deploy from Git without kubectl heroics.
 
-**Estimated time:** 6–8 weeks  
-**Target audience:** Anyone who completed Phase 01 or already works with Docker and Kubernetes daily  
-**Skippable if:** You've built Prometheus/Grafana stacks, configured GitOps with ArgoCD, and written SLOs professionally
+---
+
+## Start here — four steps
+
+```
+1. Self-check     →  Already operating prod stacks? Maybe skip to Phase 03
+2. Learn          →  Metrics → logs → traces → GitOps → SLOs (in that order)
+3. Practice       →  Run the capstone locally with Docker Compose first
+4. Capstone       →  Full observability stack, then Kubernetes + ArgoCD
+```
+
+**Local-first (recommended):** You can complete most of Phase 02 on your laptop with Docker Compose — no cloud bill required on day one. Add kind/k3d + ArgoCD when the local stack makes sense.
+
+**Cheatsheets in this repo:**
+
+| Topic | Cheatsheet |
+|---|---|
+| PromQL, LogQL, tracing | [cheatsheets/observability.md](./cheatsheets/observability.md) |
+| ArgoCD & GitOps | [cheatsheets/gitops.md](./cheatsheets/gitops.md) |
+| SLOs & error budgets | [cheatsheets/slo-error-budgets.md](./cheatsheets/slo-error-budgets.md) |
+
+---
+
+## Self-check — can you skip?
+
+If you can do **all** of these without looking things up, skip to [Phase 03](../Phase03_AI_Augmented_DevOps/README.md):
+
+- Explain metrics vs logs vs traces and when to use each
+- Write a PromQL query for 5-minute error rate
+- Build a Grafana panel for the four golden signals
+- Describe what ArgoCD does when Git and the cluster disagree
+- Define SLI, SLO, and error budget for a non-engineer
+- Find a slow span in a distributed trace
+
+Otherwise stay here. Phase 03 assumes you can **operate** a system, not just deploy one.
 
 ---
 
 ## Learning objectives
 
-When you finish this phase, you should be able to answer yes to all of these:
+By the end of Phase 02, you should answer **yes** to all of these:
 
-- [ ] Can you explain the difference between metrics, logs, and traces — and when to use each one?
-- [ ] Can you set up Prometheus to scrape a custom application and write a PromQL query to answer a real operational question?
-- [ ] Can you build a Grafana dashboard from scratch that shows the four golden signals for a service?
-- [ ] Can you instrument a Python or Go application with OpenTelemetry and see traces in a UI?
-- [ ] Can you set up ArgoCD and explain how it detects and reconciles drift?
-- [ ] Can you write an SLO for a service and create an alerting rule based on an error budget?
-- [ ] Can you explain what a service mesh does and why you might — or might not — need one?
-
-If you can say yes to all seven, you're ready for Phase 03.
+- [ ] Explain metrics, logs, and traces — and when to reach for each
+- [ ] Scrape an app with Prometheus and write PromQL for a real question
+- [ ] Build a Grafana dashboard with the four golden signals
+- [ ] Instrument an app with OpenTelemetry and view traces in Grafana
+- [ ] Explain how ArgoCD detects drift and syncs the cluster
+- [ ] Write an SLO and an alert tied to error budget burn rate
+- [ ] Explain what a service mesh is — and when you **don't** need one
 
 ---
 
 ## Topics
 
-### 1. The three pillars of observability
+Work in this order. Metrics first — everything else hangs off knowing *something is wrong*.
 
-Before touching any tools, understand what you're trying to achieve. Observability is the ability to understand the internal state of a system from its external outputs. There are three types of output — and each answers a different question.
+### 1. The three pillars (read this before installing tools)
+
+Three questions, three tools:
 
 ```
-Metrics  → "Is something wrong?"       Numbers over time. CPU at 94%. Error rate at 2.3%.
-Logs     → "What happened?"            Events with context. "Payment failed for user 4421: timeout after 30s"
-Traces   → "Where did it go slow?"     Request journeys across services. Step 3 of 7 took 800ms.
+Metrics  →  "Is something wrong?"     CPU 94%, error rate 2.3%
+Logs     →  "What happened?"          payment timeout for user 4421
+Traces   →  "Where did it go slow?"   Stripe call took 800ms of 832ms total
 ```
 
-The mistake most engineers make is using only logs and then wondering why production is hard to debug. Metrics tell you that something is wrong. Logs tell you what happened. Traces tell you where in a chain of services the problem lives. You need all three.
+Most juniors lean on logs alone and wonder why debugging hurts. Metrics flag the fire. Logs tell the story. Traces show the path through microservices.
 
-**The four golden signals** — if you instrument nothing else, instrument these four things for every service:
+**Four golden signals** — if you instrument nothing else, instrument these:
 
-| Signal | What it measures | Example metric |
+| Signal | Measures | Example |
 |---|---|---|
-| Latency | How long requests take | p50, p95, p99 response time |
-| Traffic | How much demand exists | Requests per second |
-| Errors | How often things fail | HTTP 5xx rate |
-| Saturation | How full the system is | CPU %, memory %, queue depth |
+| Latency | How long | p99 response time |
+| Traffic | How much | Requests/sec |
+| Errors | How often | 5xx rate |
+| Saturation | How full | CPU, memory, queue depth |
 
-These four signals, on a single dashboard, will tell you 80% of what you need to know about a service's health.
+One dashboard with those four tells you 80% of what you need.
 
----
-
-### 2. Prometheus — metrics collection
-
-Prometheus is the industry standard for metrics in cloud native environments. It works by scraping — pulling metrics from your applications and infrastructure on a schedule — and storing them as time series data.
-
-**How it works:**
-
-```
-Your app exposes metrics at /metrics
-         ↓
-Prometheus scrapes /metrics every 15 seconds
-         ↓
-Stores as time series: metric_name{labels} value timestamp
-         ↓
-You query with PromQL
-         ↓
-Grafana visualises the results
-```
-
-**What to cover:**
-
-- Prometheus architecture — server, exporters, Alertmanager, Pushgateway
-- The data model — metric names, labels, timestamps, samples
-- Metric types:
-  - `Counter` — only goes up (requests total, errors total)
-  - `Gauge` — goes up and down (current memory, active connections)
-  - `Histogram` — distribution of values (request duration buckets)
-  - `Summary` — like histogram but calculated client-side
-- Scrape configuration — `prometheus.yml`, `scrape_configs`, `job_name`, `static_configs`
-- Service discovery — Kubernetes SD, how Prometheus finds pods automatically
-- Exporters — `node_exporter` (host metrics), `kube-state-metrics` (k8s object metrics), `blackbox_exporter` (external checks)
-- Instrumentation — adding metrics to your own application using the Prometheus client library
-
-**PromQL — the query language:**
-
-```promql
-# Current HTTP request rate (per second, 5m window)
-rate(http_requests_total[5m])
-
-# Error rate as a percentage
-rate(http_requests_total{status=~"5.."}[5m])
-  /
-rate(http_requests_total[5m]) * 100
-
-# 95th percentile latency
-histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
-
-# Memory usage as a percentage
-(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes)
-  /
-node_memory_MemTotal_bytes * 100
-
-# Alert: error rate above 5% for 5 minutes
-ALERT HighErrorRate
-  IF rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
-  FOR 5m
-  LABELS { severity="critical" }
-  ANNOTATIONS { summary="High error rate on {{ $labels.job }}" }
-```
-
-**Recommended resources:**
-- [Prometheus docs — getting started](https://prometheus.io/docs/introduction/overview/)
-- [PromQL cheatsheet](https://promlabs.com/promql-cheat-sheet/) — bookmark this
-- [Prometheus: Up & Running](https://www.oreilly.com/library/view/prometheus-up/9781492034131/) — O'Reilly book, the definitive reference
+→ [Observability cheatsheet](./cheatsheets/observability.md)
 
 ---
 
-### 3. Grafana — visualisation
+### 2. Prometheus — metrics that scrape themselves
 
-Prometheus stores and queries. Grafana visualises. You'll use Grafana to build dashboards that make your metrics human-readable and to set up alerting rules.
-
-**What to cover:**
-
-- Connecting Prometheus as a data source
-- The dashboard model — dashboards, rows, panels, variables
-- Panel types — time series, stat, gauge, bar chart, table, heatmap
-- Dashboard variables — make one dashboard work for all services/namespaces
-- Template variables — `$namespace`, `$service`, `$instance`
-- Annotations — mark deployments, incidents on your graphs
-- Alerting in Grafana — alert rules, contact points, notification policies
-- Dashboard as code — JSON export, Grafana provisioning via ConfigMaps
-
-**The dashboard you should build first — four golden signals:**
+Prometheus **pulls** metrics from your apps on a schedule (usually every 15s). Your app exposes `/metrics`; Prometheus stores time series; you query with PromQL; Grafana draws the graphs.
 
 ```
-┌─────────────────────────┬─────────────────────────┐
-│  Request rate (RPS)     │  Error rate (%)         │
-│  [Time series graph]    │  [Time series graph]    │
-├─────────────────────────┼─────────────────────────┤
-│  p99 Latency (ms)       │  CPU Saturation (%)     │
-│  [Time series graph]    │  [Time series graph]    │
-└─────────────────────────┴─────────────────────────┘
+App /metrics  →  Prometheus scrape  →  PromQL  →  Grafana
 ```
 
-**Recommended resources:**
-- [Grafana docs — dashboards](https://grafana.com/docs/grafana/latest/dashboards/)
-- [Grafana Play](https://play.grafana.org/) — live demo environment, explore without installing
-- [Awesome Grafana Dashboards](https://grafana.com/grafana/dashboards/) — import community dashboards to learn from them
+**Learn:**
+- Counter vs gauge vs histogram (requests total vs current memory vs latency buckets)
+- `prometheus.yml` scrape configs
+- PromQL: `rate()`, `histogram_quantile()`, label filters
+- Alert rules (start simple — high error rate, pod down)
+
+**Try this:** Hit `http://localhost:9090/targets` after starting the capstone stack. Every target should be **UP** before you build dashboards.
 
 ---
 
-### 4. Structured logging with Loki
+### 3. Grafana — make metrics readable
 
-Logs are only useful if you can search them. Loki is Prometheus for logs — it stores log streams and lets you query them with LogQL. Paired with Grafana, you get logs and metrics in the same interface.
+Prometheus is for machines. Grafana is for humans (and on-call engineers at 2am).
 
-**Why structured logging matters:**
+**Learn:**
+- Connect Prometheus (and later Loki + Tempo) as data sources
+- Build panels: time series, stat, gauge
+- Dashboard variables — one dashboard, `$service` dropdown for all apps
+- Export dashboard JSON to Git (dashboards as code)
+
+**Build this first:**
 
 ```
-# Unstructured log — hard to query
-ERROR payment failed for user 4421 after 30 seconds timeout
-
-# Structured log (JSON) — queryable, filterable, aggregatable
-{"level":"error","event":"payment_failed","user_id":4421,"duration_ms":30421,"reason":"timeout"}
+┌──────────────┬──────────────┐
+│  RPS         │  Error %     │
+├──────────────┼──────────────┤
+│  p99 latency │  CPU / mem   │
+└──────────────┴──────────────┘
 ```
 
-**What to cover:**
-
-- Why JSON logs beat plain text logs at scale
-- Loki architecture — Promtail (log collector), Loki (storage/query), Grafana (UI)
-- LogQL — Loki's query language
-- Log labels — what to label and what not to (high-cardinality label anti-pattern)
-- Promtail configuration — scraping logs from Kubernetes pods
-- Correlating logs with metrics in Grafana using exemplars
-
-**LogQL basics:**
-
-```logql
-# All logs from the payments service
-{app="payments"}
-
-# Filter to errors only
-{app="payments"} |= "error"
-
-# Parse JSON and filter by field
-{app="payments"} | json | level="error"
-
-# Count error rate over time
-rate({app="payments"} |= "error" [5m])
-
-# Extract a field and filter
-{app="payments"} | json | duration_ms > 1000
-```
-
-**Recommended resource:**
-- [Loki docs — getting started](https://grafana.com/docs/loki/latest/get-started/)
+[Grafana Play](https://play.grafana.org/) is free if you want to click around before installing.
 
 ---
 
-### 5. Distributed tracing with Tempo
+### 4. Loki — logs you can search
 
-When a user request touches five services and something goes wrong, logs tell you each service's perspective but not the full picture. Traces show you the complete journey of a single request — every service it touched, how long each step took, where it failed.
+Plain text logs at scale are pain. **Structured JSON logs** + **Loki** = search like metrics.
 
-**The mental model:**
-
-```
-User clicks "Pay"
-    │
-    ├── [API Gateway]        12ms
-    │       │
-    │       ├── [Auth Service]      8ms   ✓
-    │       │
-    │       └── [Payment Service]  820ms  ← THIS IS SLOW
-    │               │
-    │               ├── [DB query]         15ms  ✓
-    │               │
-    │               └── [Stripe API]      800ms  ← ROOT CAUSE
-    │
-Total: 832ms
+```json
+{"level":"error","event":"payment_failed","user_id":4421,"duration_ms":30421}
 ```
 
-Without tracing you'd have four separate logs saying "I was called and I returned." With tracing you see the entire picture in one view.
+**Learn:**
+- LogQL: `{app="payments"} | json | level="error"`
+- Label what to label (service, env) — not high-cardinality stuff like `user_id`
+- Promtail ships logs to Loki; Grafana queries them
 
-**What to cover:**
+---
 
-- Trace anatomy — spans, trace ID, span ID, parent span, baggage
-- OpenTelemetry — the vendor-neutral standard for instrumentation
-  - The OTel SDK — instrumenting your application
-  - Auto-instrumentation vs manual instrumentation
-  - The OTel Collector — receiving, processing, exporting telemetry
-- Tempo — Grafana's trace storage backend
-- Connecting traces to logs (trace ID in logs) and metrics (exemplars)
+### 5. Tempo + OpenTelemetry — follow one request
 
-**Recommended resources:**
-- [OpenTelemetry docs](https://opentelemetry.io/docs/) — start with the getting started guide for your language
-- [Tempo docs](https://grafana.com/docs/tempo/latest/)
+When a checkout hits three services, each service's logs only know its slice. **Traces** show the full hop-by-hop path.
+
+**Learn:**
+- Spans, trace ID, parent/child spans
+- OpenTelemetry SDK in your app (or auto-instrumentation)
+- OTel Collector receives spans → forwards to Tempo
+- Grafana Explore: jump from trace → logs with the same trace ID
 
 ---
 
 ### 6. GitOps with ArgoCD
 
-In Phase 01 you deployed to Kubernetes by running `kubectl` or `helm` commands from a CI pipeline. GitOps is a better model: your Git repository is the single source of truth for what should be running, and a controller in the cluster continuously reconciles reality with what Git says.
-
-**The GitOps model:**
+Phase 01 probably deployed with `helm upgrade` from CI. GitOps flips the model: **Git is the source of truth**, a controller in the cluster keeps reality matched.
 
 ```
-Developer pushes to Git
-        ↓
-ArgoCD detects the change (polls every 3 minutes, or webhook)
-        ↓
-ArgoCD compares Git state vs cluster state
-        ↓
-If they differ → ArgoCD syncs the cluster to match Git
-        ↓
-If sync fails → ArgoCD marks app as degraded and alerts
+git push  →  ArgoCD sees diff  →  cluster syncs  →  drift gets reverted
 ```
 
-**Why this is better than CI-triggered kubectl:**
+**Why teams bother:**
+- Self-healing — someone `kubectl edit`s? ArgoCD puts it back
+- Audit trail — every change is a commit
+- Rollback = `git revert`, not a bespoke pipeline step
 
-- The cluster will self-heal if someone makes manual changes — ArgoCD will revert them
-- Git is the audit log — every change has a commit, author, and timestamp
-- Rollback is `git revert` — you don't need special pipeline logic
-- ArgoCD works even when your CI system is down
+**Learn after** local observability works. ArgoCD on kind/k3d is enough for the capstone.
 
-**What to cover:**
-
-- ArgoCD architecture — API server, repo server, application controller, dex
-- Applications and App of Apps pattern
-- Sync policies — manual vs automatic, self-heal, prune
-- Health checks — how ArgoCD determines if a deployment is healthy
-- Sync waves and hooks — controlling deployment order
-- ArgoCD Image Updater — automatically updating image tags when new images are pushed
-- RBAC in ArgoCD — who can deploy to which environments
-- Notifications — Slack/email alerts on sync success/failure
-
-**Recommended resources:**
-- [ArgoCD docs](https://argo-cd.readthedocs.io/en/stable/)
-- [GitOps with ArgoCD by Kostis Kapelonis](https://codefresh.io/gitops/) — free book
+→ [GitOps cheatsheet](./cheatsheets/gitops.md)
 
 ---
 
-### 7. SRE principles — SLOs, SLAs, and error budgets
+### 7. SLOs and error budgets
 
-Site Reliability Engineering gives you a framework for thinking about reliability as a product decision, not just an engineering one. The core insight: **reliability has a cost, and that cost must be balanced against the cost of moving fast.**
+Reliability is a product choice, not a default of 99.999%.
 
-**Key concepts:**
+- **SLI** — what you measure ("requests under 500ms that return 2xx")
+- **SLO** — your target ("99.5% over 30 days")
+- **Error budget** — how much failure you're allowed (0.5% = ~3.6 hours/month at 99.5%)
 
-**SLI (Service Level Indicator)** — a metric that measures reliability
-```
-"The percentage of HTTP requests that return a 2xx response in under 500ms"
-```
+Burn the budget too fast → slow down risky releases. Budget healthy → ship the scary feature.
 
-**SLO (Service Level Objective)** — your reliability target
-```
-"99.5% of requests should be successful and under 500ms, measured over a 30-day rolling window"
-```
-
-**SLA (Service Level Agreement)** — a contract with consequences
-```
-"We guarantee 99.5% availability. If we fall below this, customers get service credits."
-```
-
-**Error budget** — the allowed unreliability
-```
-99.5% SLO over 30 days = 0.5% budget = 3.6 hours of downtime allowed per month
-
-If you've used 3 hours this month: you have 36 minutes left — move carefully
-If you've used 0 hours this month: you have 3.6 hours — ship that risky feature
-```
-
-**What to cover:**
-
-- Writing SLIs that actually measure what users care about
-- Setting realistic SLOs — not 99.999% by default
-- Error budget policy — what happens when you burn through the budget
-- Toil — what it is, why it's the enemy, how to measure and reduce it
-- The SRE workload model — 50% engineering, 50% operations, toil cap
-- Alerting on burn rate instead of raw error rate (dramatically reduces false positives)
-
-**Recommended resources:**
-- [Google SRE Book](https://sre.google/sre-book/table-of-contents/) — free online, chapters 4 and 5 are essential
-- [The SRE Workbook](https://sre.google/workbook/table-of-contents/) — practical implementation guide, also free
+→ [SLO cheatsheet](./cheatsheets/slo-error-budgets.md) · [Google SRE Book ch.4–5](https://sre.google/sre-book/table-of-contents/)
 
 ---
 
-### 8. Service mesh basics
+### 8. Service mesh — probably not yet
 
-A service mesh is a dedicated infrastructure layer that handles service-to-service communication. It gives you mutual TLS, traffic management, and observability for free — without changing application code.
+A mesh (Istio, Linkerd) adds mTLS, retries, and traffic metrics via sidecar proxies. Most teams **don't** need one until they have many services and real pain around security or traffic shaping.
 
-**Do you actually need one?** Be honest here. Most teams don't need a service mesh until they have 10+ services and are struggling with one of these:
-
-- mTLS between every service (zero-trust networking)
-- Fine-grained traffic control (canary deployments, circuit breakers)
-- Consistent observability across all services without touching application code
-
-If you're not hitting those problems yet, a service mesh is complexity you don't need.
-
-**What to cover:**
-
-- The sidecar proxy pattern — how Envoy intercepts all traffic without application changes
-- Istio vs Linkerd — capability vs simplicity tradeoff
-- What a mesh gives you for free: mTLS, retries, circuit breaking, traffic metrics
-- Traffic management — weighted routing, header-based routing, fault injection
-- How to decide if you need one
-
-**Recommended resource:**
-- [Istio docs — getting started](https://istio.io/latest/docs/setup/getting-started/)
-- [Linkerd docs](https://linkerd.io/2.15/getting-started/) — easier to start with than Istio
+Read the concept. Skip installing one for the capstone unless you're curious.
 
 ---
 
 ## Capstone project
 
-### Full observability stack from scratch
+### Full observability stack
 
-This is the most technically satisfying project in the roadmap so far. By the end you'll have a production-quality observability setup running on your own Kubernetes cluster.
+Three small services (checkout flow), fully instrumented, with Prometheus + Grafana + Loki + Tempo locally — then Kubernetes + ArgoCD when you're ready.
 
-**What you're building:**
+**Starter code:** [projects/observability-stack/](./projects/observability-stack/)
 
-A three-service application (API gateway + payments service + user service) fully instrumented with metrics, logs, and traces — with dashboards, alerts, and GitOps-driven deployments.
-
----
-
-**Part 1 — The application**
-
-Deploy three services to Kubernetes:
-
-- `api-gateway` — receives requests, calls the other two services
-- `payments-service` — handles payment logic, has a simulated slow endpoint
-- `user-service` — handles user lookups, has a simulated error endpoint
-
-Each service must:
-- Expose a `/metrics` endpoint in Prometheus format
-- Emit structured JSON logs
-- Be instrumented with OpenTelemetry for distributed tracing
-- Have a `/health` and `/ready` endpoint
-
-You can use the starter code in `projects/observability-stack/` or write your own.
-
----
-
-**Part 2 — Metrics with Prometheus**
-
-- Deploy Prometheus using the `kube-prometheus-stack` Helm chart
-- Configure scraping for all three services
-- Write PromQL queries for all four golden signals for each service
-- Set up `node_exporter` and build a node health dashboard
-
----
-
-**Part 3 — Logs with Loki**
-
-- Deploy Loki and Promtail using the `loki-stack` Helm chart
-- Configure Promtail to collect logs from all pods
-- Write LogQL queries to:
-  - Find all errors in the last hour
-  - Calculate error rate per service
-  - Extract request duration from structured logs
-
----
-
-**Part 4 — Traces with Tempo**
-
-- Deploy Tempo using its Helm chart
-- Configure the OpenTelemetry Collector to receive traces and send to Tempo
-- Verify end-to-end traces appear in Grafana showing the full request chain
-
----
-
-**Part 5 — Dashboards**
-
-Build these dashboards in Grafana:
-
-1. **Service health overview** — all three services, four golden signals each
-2. **Node health** — CPU, memory, disk, network per node
-3. **SLO dashboard** — error budget burn rate for the payments service
-
-Export all dashboards as JSON and store them in your Git repo under `dashboards/`.
-
----
-
-**Part 6 — Alerting**
-
-Configure these alerts in Prometheus Alertmanager:
-
-- Error rate > 5% for 5 minutes → page immediately
-- p99 latency > 2 seconds for 10 minutes → warning
-- Pod in CrashLoopBackOff → critical
-- Node disk usage > 85% → warning
-- Error budget burn rate > 14.4x → critical (this means you'll exhaust budget in 1 hour)
-
----
-
-**Part 7 — GitOps with ArgoCD**
-
-- Install ArgoCD on your cluster
-- Move all Kubernetes manifests and Helm values into a Git repo
-- Create an ArgoCD Application for each service
-- Verify: when you `git push` a change to a Helm values file, ArgoCD automatically deploys it
-- Verify: when you manually `kubectl edit` something ArgoCD manages, ArgoCD reverts it within 3 minutes
-
----
+| Part | What you do |
+|---|---|
+| 1 | Run `api-gateway` (provided), build or extend `payments-service` + `user-service` |
+| 2 | Verify Prometheus targets UP, write golden-signal PromQL |
+| 3 | Build Grafana dashboards, export JSON to `dashboards/` |
+| 4 | Query logs in Loki, errors by service |
+| 5 | Follow a checkout trace in Tempo |
+| 6 | Configure alert rules, trigger one on purpose |
+| 7 | Deploy to kind/k3d with ArgoCD (stretch after local works) |
 
 **Definition of done:**
+- [ ] `docker compose up` — all services healthy
+- [ ] Prometheus scraping all three apps
+- [ ] Grafana dashboard with four golden signals (real data)
+- [ ] One end-to-end trace in Tempo
+- [ ] Loki showing JSON logs from all services
+- [ ] At least 3 alert rules tested
+- [ ] Dashboards committed as JSON under `dashboards/`
+- [ ] ArgoCD managing apps on Kubernetes (stretch OK to document manual deploy for local-only learners)
 
-- [ ] All three services running and healthy in Kubernetes
-- [ ] Prometheus scraping all services — verify with `kubectl port-forward` to Prometheus UI
-- [ ] Grafana dashboards showing real data for all four golden signals
-- [ ] At least one trace visible end-to-end in Grafana Tempo
-- [ ] Loki showing logs from all pods in Grafana
-- [ ] ArgoCD managing all deployments — nothing deployed manually
-- [ ] At least 3 alert rules configured and tested (use `amtool` to verify)
-- [ ] All dashboards exported to JSON and committed to Git
-
-**Stretch goals:**
-- Add Grafana OnCall or PagerDuty integration for alert routing
-- Configure ArgoCD Image Updater to automatically bump image tags on new builds
-- Write a runbook for each alert rule — what to do when it fires
-- Add k6 load testing scripts that generate realistic traffic patterns
+Full walkthrough → [projects/observability-stack/README.md](./projects/observability-stack/README.md)
 
 ---
 
-## How to know you're ready for Phase 03
+## Ready for Phase 03?
 
-Do not move on until you can do all of the following without googling:
+Don't move on until you can do these **without googling**:
 
-- Explain the difference between a counter and a gauge in Prometheus and when to use each
-- Write a PromQL query that calculates the error rate for a service over the last 5 minutes
-- Explain what ArgoCD does when it detects drift between Git and the cluster
-- Define SLO, SLI, and error budget in plain language that a non-engineer would understand
-- Explain what a distributed trace is and why you can't get the same information from logs alone
-- Look at a Grafana dashboard and identify which of the four golden signals is degraded
-- Explain what happens to an existing ArgoCD-managed deployment when you `kubectl edit` it directly
-
-If any of those trips you up, go back and spend more time. Phase 03 builds on the assumption that you can operate a real production system, not just deploy one.
+1. Counter vs gauge — when to use each
+2. PromQL error rate over 5 minutes for one service
+3. What ArgoCD does on drift
+4. SLI / SLO / error budget in plain English
+5. Why traces beat logs alone for cross-service latency
+6. Spot the degraded golden signal on a dashboard
+7. What happens if you `kubectl edit` an ArgoCD-managed Deployment
 
 ---
 
-## Resources summary
+## Resources
 
-| Resource | Type | Cost | Link |
-|---|---|---|---|
-| Prometheus docs | Docs | Free | [prometheus.io/docs](https://prometheus.io/docs/introduction/overview/) |
-| PromQL cheatsheet | Reference | Free | [promlabs.com](https://promlabs.com/promql-cheat-sheet/) |
-| Prometheus: Up & Running | Book | Paid | [O'Reilly](https://www.oreilly.com/library/view/prometheus-up/9781492034131/) |
-| Grafana Play | Sandbox | Free | [play.grafana.org](https://play.grafana.org/) |
-| Grafana dashboard library | Reference | Free | [grafana.com/dashboards](https://grafana.com/grafana/dashboards/) |
-| Loki docs | Docs | Free | [grafana.com/docs/loki](https://grafana.com/docs/loki/latest/get-started/) |
-| OpenTelemetry docs | Docs | Free | [opentelemetry.io/docs](https://opentelemetry.io/docs/) |
-| Tempo docs | Docs | Free | [grafana.com/docs/tempo](https://grafana.com/docs/tempo/latest/) |
-| ArgoCD docs | Docs | Free | [argo-cd.readthedocs.io](https://argo-cd.readthedocs.io/en/stable/) |
-| Google SRE Book | Book | Free | [sre.google/sre-book](https://sre.google/sre-book/table-of-contents/) |
-| The SRE Workbook | Book | Free | [sre.google/workbook](https://sre.google/workbook/table-of-contents/) |
-| Istio getting started | Docs | Free | [istio.io/docs](https://istio.io/latest/docs/setup/getting-started/) |
+| Resource | What it's for |
+|---|---|
+| [Prometheus docs](https://prometheus.io/docs/introduction/overview/) | Metrics fundamentals |
+| [PromQL cheatsheet](https://promlabs.com/promql-cheat-sheet/) | Query reference |
+| [Grafana Play](https://play.grafana.org/) | Click without installing |
+| [Loki docs](https://grafana.com/docs/loki/latest/get-started/) | Log aggregation |
+| [OpenTelemetry docs](https://opentelemetry.io/docs/) | Tracing |
+| [ArgoCD docs](https://argo-cd.readthedocs.io/en/stable/) | GitOps |
+| [Google SRE Book](https://sre.google/sre-book/table-of-contents/) | SLOs (free) |
+| Repo cheatsheets | Day-to-day lookup |
 
 ---
 
-## Community & tracking
+## Track your progress
 
-Open an issue with the title `[Phase 02] Starting` when you begin and `[Phase 02] Done` when you complete the capstone. When you post Done, share:
-- A screenshot of your Grafana dashboard
-- The GitHub repo link for your observability stack
-- One thing that was harder than you expected
+```
+[Phase 02] Starting — your-handle
+[Phase 02] Done — your-handle
+```
+
+When you mark Done, share a Grafana screenshot and your repo link.
 
 ---
 
