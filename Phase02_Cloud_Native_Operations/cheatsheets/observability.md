@@ -1,6 +1,15 @@
 # Observability cheatsheet
 
-PromQL, LogQL, and the patterns you'll use every day running production systems.
+**Use this when:** dashboards look wrong, alerts fire, or you're debugging latency across services.  
+**Daily trio:** Prometheus targets UP → Grafana golden signals → Loki/Tempo for the story.
+
+**Quick debug order:**
+
+```
+1. Is it on fire?     → Grafana / Prometheus (error rate, latency, saturation)
+2. What happened?     → Loki (structured logs, filter by level/service)
+3. Where was it slow? → Tempo (trace waterfall)
+```
 
 ---
 
