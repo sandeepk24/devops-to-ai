@@ -27,7 +27,6 @@ services:
     build: ./services/api-gateway
     ports:
       - "8000:8000"
-      - "8001:8001"   # metrics port
     environment:
       PAYMENTS_SERVICE_URL: http://payments-service:8000
       USER_SERVICE_URL: http://user-service:8000
@@ -117,8 +116,7 @@ services:
     image: grafana/promtail:2.9.8
     volumes:
       - ./config/promtail/promtail.yml:/etc/promtail/config.yml:ro
-      - /var/log:/var/log:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
@@ -129,7 +127,6 @@ services:
     image: grafana/tempo:2.4.2
     ports:
       - "3200:3200"
-      - "4317:4317"   # OTLP gRPC (used directly without collector for local dev)
     volumes:
       - ./config/tempo/tempo.yml:/etc/tempo/config.yml:ro
       - tempo_data:/tmp/tempo
