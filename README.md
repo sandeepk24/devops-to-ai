@@ -133,7 +133,7 @@ devops-to-ai/
 ├── Phase00_Foundation/          Linux, Bash, Git + server health reporter
 ├── Phase01_Core_DevOps/         Docker, K8s, Terraform, CI/CD + microservice pipeline
 ├── Phase02_Cloud_Native_Operations/   Observability + GitOps stack project
-├── Phase03_AI_Augmented_DevOps/       AI incident bot + prompt cheatsheets
+├── Phase03_AI_Augmented_DevOps/       AI incident bot + prompt/trust cheatsheets
 ├── Phase04_MLOps_LLMOps/              LLM gateway, RAG, Grafana dashboards
 ├── Phase05_AIOps_Autonomous_Operations/   🔜 teaser — self-healing ops
 ├── Phase06_The_Autonomous_Engineer/       🔜 teaser — AI agents as operators
