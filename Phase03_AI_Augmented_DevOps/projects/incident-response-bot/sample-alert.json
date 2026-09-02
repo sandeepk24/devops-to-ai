@@ -1,0 +1,19 @@
+{
+  "version": "4",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "HighErrorRate",
+        "severity": "critical",
+        "job": "payments-service"
+      },
+      "annotations": {
+        "summary": "Error rate above 5% for payments-service",
+        "description": "Simulated alert for Phase 03 Path A"
+      },
+      "startsAt": "2026-09-02T18:00:00Z"
+    }
+  ]
+}

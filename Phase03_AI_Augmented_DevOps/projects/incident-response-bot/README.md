@@ -1,137 +1,134 @@
-# Project: AI-powered incident response bot
+# Capstone: AI-powered incident response bot
 
-> Phase 03 capstone project — build this before moving to Phase 04.
+> **Phase 03 project** — finish this before [Phase 04](../../../Phase04_MLOps_LLMOps/README.md).  
+> Phase guide: [Phase 03 README](../../README.md)
 
-A Slack bot that automatically gathers incident context from your observability stack, sends it to Claude for analysis, and posts a structured diagnosis to your incidents channel — all within 30 seconds of an alert firing.
+When an alert fires, on-call usually spends the first ten minutes *gathering context*. This bot does that for you: webhook in → logs/metrics/deploys → LLM diagnosis → terminal or Slack.
 
 ---
 
-## What's in this project
+## Paths (pick one, then level up)
+
+| Path | Needs | What you prove |
+|---|---|---|
+| **A — Local mock** | API key *or* `LLM_PROVIDER=mock-llm` | Webhook → diagnosis in your terminal |
+| **B — Real observability** | Phase 02 Compose (Prom + Loki) | Same bot, real context |
+| **C — Slack ChatOps** | Slack app + token | Posts to `#incidents`, slash commands |
+
+**Start with Path A.** Don't block yourself on Slack or a cluster.
+
+---
+
+## What's in this folder
 
 ```
 incident-response-bot/
-├── bot.py                     ← main bot (webhook receiver + slash commands)
+├── bot.py                 ← webhook + context gather + LLM + console/Slack
 ├── requirements.txt
-├── .env.example               ← copy to .env and fill in your values
+├── .env.example
+├── sample-alert.json      ← curl this at /webhook
 ├── prompts/
-│   ├── incident-analysis.txt  ← the core diagnosis prompt (version controlled)
-│   └── log-analysis.txt       ← used by /logs slash command
+│   ├── incident-analysis.txt
+│   └── log-analysis.txt
 ├── scripts/
-│   └── ai_review.py           ← AI PR review script (called from GitHub Actions)
-└── .github/
-    └── workflows/
-        └── ai-review.yml      ← the PR review pipeline
+│   └── ai_review.py       ← AI PR review for GitHub Actions
+└── .github/workflows/
+    └── ai-review.yml
 ```
 
 ---
 
-## Quick start
+## Path A — 10 minutes to first diagnosis
 
 ```bash
-# 1. Install dependencies
+cd Phase03_AI_Augmented_DevOps/projects/incident-response-bot
+
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# 2. Set up environment
 cp .env.example .env
-# Edit .env with your API keys and URLs
+# Option 1: no API spend — leave keys empty, set LLM_PROVIDER=mock-llm
+# Option 2: set ANTHROPIC_API_KEY=sk-ant-...  (or OPENAI_API_KEY)
 
-# 3. Run the bot
+# defaults: MOCK_MODE=true
 python bot.py
+```
 
-# 4. Test the webhook locally
-curl -X POST http://localhost:8000/webhook \
+In another terminal:
+
+```bash
+curl -s -X POST http://localhost:8000/webhook \
   -H "Content-Type: application/json" \
-  -d '{
-    "version": "4",
-    "status": "firing",
-    "alerts": [{
-      "status": "firing",
-      "labels": {
-        "alertname": "HighErrorRate",
-        "severity": "critical",
-        "job": "payments-service"
-      },
-      "startsAt": "2024-01-15T02:34:00Z"
-    }]
-  }'
+  -d @sample-alert.json | jq .
 ```
 
----
+You should see a printed incident report in the bot terminal (summary, likely cause, top checks).
 
-## Connecting to Alertmanager
-
-Add this to your `alertmanager.yml`:
-
-```yaml
-receivers:
-  - name: incident-bot
-    webhook_configs:
-      - url: http://incident-bot:8000/webhook
-        send_resolved: false
-
-route:
-  receiver: incident-bot
-  group_by: [alertname, job]
-  group_wait: 30s
-  group_interval: 5m
-  repeat_interval: 4h
-```
+Health check: `curl -s http://localhost:8000/health | jq .`
 
 ---
 
-## Setting up Slack
+## Path B — real Prometheus / Loki
 
-1. Go to [api.slack.com/apps](https://api.slack.com/apps) → Create New App → From Scratch
-2. Under **OAuth & Permissions**, add these Bot Token Scopes:
-   - `chat:write`
-   - `commands`
-3. Under **Slash Commands**, create:
-   - `/status` → `https://your-bot-url/slack/commands`
-   - `/logs` → `https://your-bot-url/slack/commands`
-   - `/deploys` → `https://your-bot-url/slack/commands`
-   - `/rollback` → `https://your-bot-url/slack/commands`
-4. Install the app to your workspace
-5. Copy the Bot User OAuth Token to `SLACK_BOT_TOKEN` in `.env`
+1. Start the Phase 02 observability stack (`docker compose up` there).
+2. In `.env`:
+   ```bash
+   MOCK_MODE=false
+   PROMETHEUS_URL=http://localhost:9090
+   LOKI_URL=http://localhost:3100
+   ```
+3. Restart the bot and fire a real or sample alert whose `job` label matches a scraped service (`payments-service`, etc.).
 
----
-
-## Setting up the AI PR review
-
-1. Add your `ANTHROPIC_API_KEY` to your GitHub repo secrets
-2. Copy `.github/workflows/ai-review.yml` to your infrastructure repo
-3. Open any PR that touches `.tf`, `.yaml`, or `.py` files — the review will post automatically
+If Loki/Prometheus are down, the bot **must still respond** (it returns "unavailable" strings — never crash).
 
 ---
 
-## Your tasks
+## Path C — Slack
 
-The bot skeleton is provided. Implement the `TODO` sections in `bot.py`:
+1. Create a Slack app → Bot Token Scopes: `chat:write`, `commands`
+2. Invite the bot to `#incidents`
+3. Set `SLACK_BOT_TOKEN` and `SLACK_INCIDENT_CHANNEL` in `.env`
+4. Re-run the webhook — message should appear in Slack
+5. Implement slash commands in `handle_slash_command` (`/status`, `/logs`, `/deploys`, `/rollback` with confirmation)
 
-- [ ] `get_loki_logs()` — query Loki for recent error logs
-- [ ] `get_prometheus_metrics()` — fetch golden signal metrics
-- [ ] `get_recent_deployments()` — get ArgoCD or git deploy history
-- [ ] `get_pod_events()` — fetch Kubernetes events
-- [ ] `analyse_incident()` — call Claude API and parse response
-- [ ] `format_slack_message()` — build Slack Block Kit message
-- [ ] `/status` slash command
-- [ ] `/logs` slash command
-- [ ] `/deploys` slash command
-- [ ] `/rollback` slash command (with confirmation step)
+Public URL tip: use [ngrok](https://ngrok.com/) while learning so Slack can reach your laptop.
+
+---
+
+## AI PR review (Part 2)
+
+1. Add `ANTHROPIC_API_KEY` to your GitHub repo secrets
+2. Copy `.github/workflows/ai-review.yml` and `scripts/ai_review.py` into the repo you want reviewed (adjust paths if the repo root *is* this project)
+3. Open a PR that touches `.tf` / `.yaml` / `.py` — the Action posts a review comment
+
+---
+
+## Your remaining tasks
+
+Working Path A is provided. Level up:
+
+- [ ] Path B: confirm real PromQL / LogQL results show up in the diagnosis
+- [ ] Improve `prompts/incident-analysis.txt` after a few real (or mock) runs — prompts are code
+- [ ] Path C: Slack post + `/status` returning live metrics
+- [ ] `/rollback` two-step confirmation (never auto-execute)
+- [ ] AI PR review on a throwaway PR
+- [ ] Document in your fork README how someone else runs Path A
 
 ---
 
 ## Definition of done
 
-- [ ] Webhook receives alert and posts to Slack within 30 seconds
-- [ ] Slack message includes AI summary, likely cause, and top 3 checks
-- [ ] `/status payments-service` returns real metric data
-- [ ] AI PR review posts a comment on a test PR
-- [ ] Bot handles Loki/Prometheus being unavailable without crashing
-- [ ] All prompts in `prompts/` as version-controlled `.txt` files
-- [ ] `.env.example` documents every required variable
+- [ ] Webhook produces a diagnosis within ~30 seconds (console counts)
+- [ ] Diagnosis has summary + at least one specific check
+- [ ] Bot survives Loki/Prometheus failure
+- [ ] Prompts versioned under `prompts/`
+- [ ] AI PR review posts a comment *or* you document a dry-run of `ai_review.py` with a sample diff
+- [ ] `.env.example` lists every variable you used
 
 ---
 
-## Sharing your work
+## Sharing
 
-When done, open a `[Phase 03] Done` issue on the devops-to-ai repo. Include a screenshot of your bot responding to a real (or simulated) alert in Slack.
+Open `[Phase 03] Done` on [devops-to-ai](https://github.com/sandeepk24/devops-to-ai) with a screenshot of the console/Slack diagnosis and the prompt you like best.
+
+→ [Phase 04 — MLOps & LLMOps](../../../Phase04_MLOps_LLMOps/README.md)
