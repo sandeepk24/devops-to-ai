@@ -1,6 +1,7 @@
-# Prompt engineering cheatsheet for DevOps
+# Prompt engineering for DevOps
 
-Patterns, templates, and anti-patterns for getting reliable output from LLMs in infrastructure work.
+**Use this when:** asking an LLM for Terraform, K8s YAML, runbook drafts, or incident analysis.  
+**Rule of thumb:** if you wouldn't merge the output without reading it, your prompt needs more guardrails.
 
 ---
 
