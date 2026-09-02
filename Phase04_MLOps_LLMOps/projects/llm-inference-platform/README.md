@@ -1,6 +1,6 @@
 # Project: LLM inference platform with RAG
 
-> Phase 04 capstone — build this before moving to Phase 05.
+> Phase 04 capstone — build this before moving to Phase 05 (DevSecOps).
 
 An OpenAI-compatible inference gateway in front of a model server, plus a RAG service backed by Qdrant, with Prometheus metrics you can actually operate on. Works with real **vLLM** on a GPU, or with the included **mock inference** backend on a laptop.
 

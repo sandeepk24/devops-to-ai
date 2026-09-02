@@ -14,8 +14,11 @@ assignees: ''
 - [ ] Phase 02 — Cloud Native Operations
 - [ ] Phase 03 — AI-Augmented DevOps
 - [ ] Phase 04 — MLOps & LLMOps
-- [ ] Phase 05 — AIOps & Autonomous Operations
-- [ ] Phase 06 — The Autonomous Engineer
+- [ ] Phase 05 — DevSecOps & Supply Chain
+- [ ] Phase 06 — Platform Engineering
+- [ ] Phase 07 — AIOps & Autonomous Operations
+- [ ] Phase 08 — Agentic Infrastructure
+- [ ] Phase 09 — The Autonomous Engineer
 
 ## Status
 

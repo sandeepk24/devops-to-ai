@@ -30,7 +30,7 @@ When you finish this phase, you should be able to answer yes to all of these:
 - [ ] Can you design a model deployment pattern (blue/green, canary, or shadow) for a generative API?
 - [ ] Can you explain prompt/model versioning and why "just change the prompt in prod" is an incident waiting to happen?
 
-If you can say yes to all seven, you're ready for Phase 05.
+If you can say yes to all seven, you're ready for Phase 05 (DevSecOps) — and the rest of the autonomy arc.
 
 ---
 
@@ -460,7 +460,7 @@ Do not move on until you can do all of the following:
 - Explain why prompts and model artifacts must be versioned like application code
 - Reason about GPU VRAM as a capacity constraint (even if you only used the mock backend)
 
-Phase 05 assumes you can run AI workloads as services. If the gateway/RAG stack still feels magical, stay here longer.
+Phase 05 (DevSecOps) assumes you can run services — including AI workloads — as real deployable systems. If the gateway/RAG stack still feels magical, stay here longer.
 
 ---
 
@@ -491,4 +491,4 @@ Open an issue with `[Phase 04] Starting` when you begin and `[Phase 04] Done` wh
 
 ---
 
-*← [Phase 03 — AI-Augmented DevOps](../Phase03_AI_Augmented_DevOps/README.md) | [Phase 05 — AIOps & Autonomous Operations →](../Phase05_AIOps_Autonomous_Operations/README.md)*
+*← [Phase 03 — AI-Augmented DevOps](../Phase03_AI_Augmented_DevOps/README.md) | [Phase 05 — DevSecOps →](../Phase05_DevSecOps/README.md)*
