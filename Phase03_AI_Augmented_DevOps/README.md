@@ -1,502 +1,260 @@
 # Phase 03 — AI-Augmented DevOps
 
-> **"The best DevOps engineers of 2026 aren't the ones who know the most tools. They're the ones who know how to think alongside AI."**
+> **"The best DevOps engineers aren't the ones who know the most tools. They're the ones who know how to think alongside AI."**
 >
-> This is the turning point of the roadmap. Everything before this phase was about learning how infrastructure works. Everything after this phase is about building infrastructure that thinks. Phase 03 is the bridge — it's where you learn to use AI as a force multiplier in your daily work, before you learn to build AI systems in Phases 04–06.
+> Phases 00–02 taught you to build and operate infrastructure. Phase 03 is the bridge: use AI to do that work faster — then build small AI tools that help on-call. Phases 04–06 go deeper into *running* AI as infrastructure.
 
 ---
 
-## What this phase is
+## Who this is for
 
-AI-augmented DevOps means using AI tools to do your existing job dramatically faster and better — not replacing your skills, but amplifying them. A senior engineer with AI tools outperforms a team of junior engineers without them. That gap is only going to grow.
+| You are... | Do this |
+|---|---|
+| Finished Phase 02 (or comfortable with Prom/Loki and basic Python APIs) | Work the topics, then the capstone |
+| Junior DevOps — use ChatGPT/Copilot already, never shipped an AI bot | Focus on prompts + trust, then build the bot with **mock mode** first |
+| Already ship LLM-backed ops tools in production | Take the [self-check](#self-check--can-you-skip) — skip to Phase 04 if you pass |
 
-This phase covers two things:
+**Time:** 4–5 weeks part-time  
+**Goal:** Write prompts that produce *safe* infra output, and ship a small bot that turns an alert into a useful diagnosis.
 
-1. **Using AI in your daily DevOps workflow** — coding assistants, prompt engineering, AI-powered pipelines
-2. **Building AI-powered operational tools** — incident bots, automated runbooks, ChatOps integrations
+---
 
-By the end of this phase you'll have built a real AI-powered incident response system that would genuinely save a team hours per week.
+## Start here — four steps
 
-**Estimated time:** 4–5 weeks  
-**Target audience:** Anyone who completed Phase 02 or works as a DevOps/SRE engineer today  
-**Skippable if:** You've built production LLM integrations, written prompt engineering guidelines for a team, and deployed AI-powered operational tooling professionally
+```
+1. Self-check     →  Already building LLM ops tooling? Maybe skip to Phase 04
+2. Learn          →  Mindset → prompts → daily AI → CI review → trust
+3. Practice       →  Write prompts, run the mock bot, then wire real Prom/Loki
+4. Capstone       →  Incident bot + AI PR review (required before Phase 04)
+```
+
+**You do not need Slack or a full cluster on day one.** The capstone has a **mock mode** that prints analysis to your terminal. Add Slack / Phase 02 observability when you're ready.
+
+**Cheatsheets:**
+
+| Topic | Cheatsheet |
+|---|---|
+| Prompt patterns for DevOps | [cheatsheets/prompt-engineering.md](./cheatsheets/prompt-engineering.md) |
+| When to trust AI output | [cheatsheets/trusting-ai-output.md](./cheatsheets/trusting-ai-output.md) |
+
+**What you need:**
+
+| Thing | Why | Notes |
+|---|---|---|
+| Python 3.11+ | Run the bot | Same as Phase 01/02 |
+| Anthropic or OpenAI API key | LLM calls | Start with a small paid/credits account |
+| Phase 02 stack (optional at first) | Real logs/metrics | Mock mode works without it |
+| Slack workspace (optional) | Post alerts to a channel | Console output is fine for Path A |
+
+---
+
+## Self-check — can you skip?
+
+If you can do **all** of these without looking things up, skip to [Phase 04](../Phase04_MLOps_LLMOps/README.md):
+
+- Write a prompt that generates a production-safe Kubernetes Deployment (limits, probes, non-root)
+- Explain zero-shot vs few-shot vs chain-of-thought with a DevOps example for each
+- Call an LLM API from Python and parse structured JSON back
+- Name three red flags in AI-generated Terraform or K8s YAML
+- Explain prompt injection and why it matters when bots read logs
+- Sketch how an alert webhook → context gather → LLM → Slack flow works
+
+Otherwise stay here. Phase 04 assumes you're comfortable with the **API layer** before you run GPUs.
 
 ---
 
 ## Learning objectives
 
-When you finish this phase, you should be able to answer yes to all of these:
+By the end of Phase 03, answer **yes** to all of these:
 
-- [ ] Can you write a prompt that reliably generates correct Terraform, GitHub Actions, or Kubernetes YAML from a natural language description?
-- [ ] Can you explain why a vague prompt produces bad infrastructure code — and fix it?
-- [ ] Can you build a GitHub Actions pipeline that uses an LLM to review PRs and flag issues?
-- [ ] Can you build a Slack bot that queries logs, metrics, and traces to diagnose an incident?
-- [ ] Can you explain the difference between zero-shot, few-shot, and chain-of-thought prompting — and when to use each?
-- [ ] Can you use the Claude or OpenAI API to build a tool that takes structured input and returns actionable output?
-- [ ] Can you evaluate whether an LLM output is trustworthy enough to act on automatically?
-
-If you can say yes to all seven, you're ready for Phase 04.
+- [ ] Write prompts that reliably produce correct Terraform / Actions / K8s YAML
+- [ ] Fix a vague prompt that produces bad infra code
+- [ ] Build a CI step that reviews a PR with an LLM
+- [ ] Build (or complete) a bot that diagnoses an alert with logs + metrics context
+- [ ] Explain zero-shot, few-shot, and chain-of-thought — and when each helps
+- [ ] Call Claude or OpenAI from Python and get structured output
+- [ ] Decide when AI output is safe to apply vs needs a human
 
 ---
 
 ## Topics
 
-### 1. The AI-augmented engineer mindset
+Work in order. Don't jump to the Slack bot before you can write a good prompt — you'll just automate bad questions.
 
-Before touching any tools, understand the shift. AI doesn't replace your expertise — it replaces the time you spend on repetitive translation tasks: turning intentions into code, turning alerts into summaries, turning logs into diagnoses. Your job becomes higher-order: deciding what to build, evaluating what AI produces, and knowing when to trust it.
+### 1. Mindset — AI as a force multiplier
 
-**The three modes of AI assistance:**
+AI doesn't replace knowing Linux, K8s, or Prometheus. It replaces the *boring translation work*: intention → YAML, logs → summary, alert → first hypothesis.
 
 ```
-Mode 1 — Generate        "Write me a Terraform module for an S3 bucket with versioning"
-                         You review, you own it. AI is a fast first draft.
-
-Mode 2 — Analyse         "Here are 500 lines of logs from a failing pod. What's wrong?"
-                         AI processes at scale. You validate the conclusion.
-
-Mode 3 — Automate        "When this alert fires, query logs, generate a summary, post to Slack"
-                         AI acts autonomously within a defined scope. You design the guardrails.
+Generate   →  "Draft this Terraform"     — you review and own it
+Analyse    →  "What's wrong in these logs?" — you validate the conclusion
+Automate   →  "On alert, gather context + post diagnosis" — you design guardrails
 ```
 
-**What AI is genuinely good at in DevOps:**
-- Generating boilerplate — Dockerfiles, Terraform, CI pipeline YAML, Helm charts
-- Explaining error messages and stack traces
-- Summarising long log files and incident timelines
-- Writing documentation from code
-- Translating between tools — "convert this Jenkins pipeline to GitHub Actions"
-- Generating test cases for infrastructure code
-- Drafting runbooks from incident history
+**Good at:** boilerplate, explaining errors, summarising logs, translating Jenkins→Actions, drafting runbooks.  
+**Bad at:** your exact environment, security judgment, final "ship to prod" decisions.
 
-**What AI is still bad at:**
-- Understanding your specific environment and constraints
-- Security-sensitive decisions (always review IAM policies, network rules)
-- Anything requiring real-time data it doesn't have
-- Making final operational decisions — that's always a human
+Your job shifts up a level: decide what to build, evaluate what AI produced, know when to trust it.
 
 ---
 
 ### 2. Prompt engineering for DevOps
 
-Prompt engineering is the skill of communicating with LLMs precisely enough to get useful output. For DevOps work, this means writing prompts that produce correct, safe, production-ready infrastructure code and operational analysis.
-
-**The anatomy of a good DevOps prompt:**
+Vague prompts produce vague (or dangerous) infra. The pattern that works:
 
 ```
-[Context]    What environment, constraints, and conventions apply
-[Task]       Exactly what you want the AI to produce
-[Format]     How you want the output structured
-[Guardrails] What to avoid or flag
+[Context]     env, constraints, conventions
+[Task]        exactly what to produce
+[Format]      YAML only / JSON schema / bullet list
+[Guardrails]  no *, no 0.0.0.0/0, non-root, resource limits…
 ```
 
-**Example — bad prompt vs good prompt:**
+**Bad:** `Write a Kubernetes deployment`  
+**Good:** image, replicas, requests/limits, probes, ConfigMap, non-root, rolling update strategy, "output YAML only."
 
-```
-# Bad prompt (too vague)
-"Write a Kubernetes deployment"
+Techniques you'll use constantly:
+- **Zero-shot** — straightforward explain/fix
+- **Few-shot** — show one example of the format you want
+- **Chain-of-thought** — "reason through causes before the fix" (debugging)
+- **Role** — "senior SRE at a regulated fintech…" for security reviews
 
-# Good prompt (specific context + constraints + format)
-"Write a Kubernetes Deployment manifest for a Python FastAPI application with these requirements:
-- Image: ghcr.io/myorg/payments-service:latest
-- 3 replicas
-- Resource limits: 500m CPU, 512Mi memory. Requests: 100m CPU, 128Mi memory
-- Liveness probe: GET /health, initial delay 10s, period 30s
-- Readiness probe: GET /ready, initial delay 5s, period 10s
-- Environment variables from a ConfigMap named payments-config
-- Runs as non-root user (UID 1000)
-- Rolling update strategy with maxSurge 1, maxUnavailable 0
+→ [Prompt cheatsheet](./cheatsheets/prompt-engineering.md)
 
-Output only the YAML manifest, no explanation."
-```
-
-**Prompting techniques:**
-
-**Zero-shot** — ask directly, no examples
-```
-"Explain what this Terraform error means and how to fix it: [error]"
-```
-
-**Few-shot** — give examples of what good output looks like
-```
-"Convert these alert rules to the new format.
-
-Example input:
-  - alert: HighCPU
-    expr: cpu_usage > 80
-
-Example output:
-  - alert: HighCPU
-    expr: cpu_usage_percent > 80
-    for: 5m
-    labels:
-      severity: warning
-
-Now convert these: [your rules]"
-```
-
-**Chain-of-thought** — ask AI to reason step by step before answering
-```
-"A pod is stuck in Pending state. Before giving me the fix, walk through the possible causes
-in order of likelihood, check each one against these pod events: [events].
-Then tell me the most likely cause and the exact kubectl command to fix it."
-```
-
-**Role prompting** — give AI a specific expert persona
-```
-"You are a senior SRE at a fintech company with strict compliance requirements.
-Review this Terraform IAM policy and flag any permissions that violate least-privilege.
-Be specific about which permissions are too broad and suggest alternatives."
-```
-
-**Recommended resources:**
-- [Anthropic prompt engineering guide](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview)
-- [OpenAI prompt engineering guide](https://platform.openai.com/docs/guides/prompt-engineering)
-- [Prompt injection attacks](https://learnprompting.org/docs/prompt_hacking/injection) — understand the security risks
+**Try this:** Take a real service from Phase 01/02. Ask an LLM for a Deployment. Reject anything missing limits or running as root. Rewrite the prompt until the output is something you'd actually merge.
 
 ---
 
-### 3. AI-assisted coding in your daily workflow
+### 3. AI in your daily workflow
 
-The coding assistants — GitHub Copilot, Cursor, Claude — are the fastest way to see ROI from AI in DevOps. The engineers who get the most value aren't the ones who use them blindly, they're the ones who know how to steer them.
+Copilot / Cursor / Claude Chat are the fastest ROI. Steer them; don't rubber-stamp.
 
-**What to cover:**
-
-**GitHub Copilot / Cursor:**
-- Tab completion vs inline chat vs multi-file edits
-- Writing comments that guide Copilot to the right output
-- Using Copilot for Terraform — it's exceptionally good at resource boilerplate
-- Copilot for writing tests — describe what you want to test, get the test
-- When to reject suggestions — learning to read AI output critically
-
-**Claude / ChatGPT for DevOps:**
-- Pasting error messages and getting structured diagnoses
-- "Explain this like I'm debugging it at 3am" — getting operational context
-- Converting between formats: Ansible → Terraform, Jenkins → GitHub Actions
-- Generating multiple variations — "give me 3 different approaches to this"
-- Asking for the security implications of infrastructure code
-
-**Building personal AI workflows:**
-- Shell aliases that pipe commands to AI: `kubectl describe pod failing-pod | ai-explain`
-- A `git diff | ai-review` alias that reviews your changes before committing
-- An `explain-error` function that formats compiler/runtime errors for LLM input
-
-**Recommended resources:**
-- [GitHub Copilot docs](https://docs.github.com/en/copilot)
-- [Cursor docs](https://cursor.sh/docs)
+- Comments that describe intent beat hoping tab-complete guesses right
+- Paste errors with "explain like I'm debugging at 3am"
+- `git diff` → AI review before you open the PR
+- Always ask: "what would break in production if this is wrong?"
 
 ---
 
-### 4. AI in CI/CD pipelines
+### 4. AI in CI/CD
 
-Embedding AI into your pipelines moves assistance from manual to automatic. Instead of remembering to ask an AI to review your code, the pipeline does it on every PR.
+Move review from "when I remember" to "every PR."
 
-**What to cover:**
+Typical flow: checkout → diff → LLM review prompt → post comment on the PR. Flag security issues, missing limits, hardcoded secrets, obvious bugs. Capstone Part 2 does exactly this.
 
-**AI code review in CI:**
-- Using the Claude or OpenAI API in a GitHub Actions step
-- Reviewing Terraform plans for security issues and cost implications
-- Reviewing Kubernetes manifests for best practice violations
-- Posting AI review comments directly to GitHub PRs via the API
-
-**AI-generated test coverage:**
-- Using LLMs to generate Terratest cases from Terraform modules
-- Generating unit tests for Python automation scripts
-- Identifying untested code paths and generating tests for them
-
-**AI-powered documentation:**
-- Automatically generating module documentation from Terraform code
-- Generating runbooks from deployment pipeline definitions
-- Keeping `CHANGELOG.md` updated from conventional commits
-
-**Security scanning with AI:**
-- Combining static analysis (Trivy, Checkov) with AI explanation
-- "This Trivy scan found 3 HIGH vulnerabilities — explain each and prioritise fixes"
-- AI-assisted CVE triage: is this vulnerability actually exploitable in our context?
-
-**Example — AI PR review GitHub Action:**
-
-```yaml
-name: AI code review
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  ai-review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get diff
-        id: diff
-        run: |
-          git diff origin/main...HEAD > diff.txt
-          echo "diff_size=$(wc -c < diff.txt)" >> $GITHUB_OUTPUT
-
-      - name: AI review
-        if: steps.diff.outputs.diff_size > 0
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python .github/scripts/ai_review.py
-```
+Keep it **advisory** at first — don't fail the build on AI opinion until you trust the prompts.
 
 ---
 
-### 5. LLM-powered incident response
+### 5. Incident response with LLMs
 
-This is where AI moves from assistant to collaborator. When an alert fires at 2am, the first 10 minutes are usually spent gathering context — pulling logs, checking metrics, reading recent deploys. An AI bot can do all of that in seconds.
-
-**The anatomy of an AI incident response system:**
+At 2am the first ten minutes are usually *gathering context*. A bot can do that in seconds:
 
 ```
-Alert fires (PagerDuty / Alertmanager)
-        ↓
-Bot receives webhook
-        ↓
-Bot gathers context automatically:
-  - Recent logs from Loki (last 30 mins, error level)
-  - Metrics from Prometheus (error rate, latency, saturation)
-  - Recent deployments (git log or ArgoCD history)
-  - Pod events from Kubernetes
-        ↓
-Bot sends context to LLM with a structured prompt:
-  "Given these logs, metrics, and recent changes,
-   what is the most likely root cause?
-   What are the top 3 things to check?
-   Which runbook applies?"
-        ↓
-LLM returns structured analysis
-        ↓
-Bot posts to Slack incident channel:
-  - Summary of what's wrong
-  - Likely root cause
-  - Recommended next steps
-  - Link to relevant runbook
-        ↓
-On-call engineer joins with context already assembled
+Alertmanager webhook
+    → fetch logs (Loki) + metrics (Prometheus) + deploys + pod events
+    → structured prompt → LLM
+    → Slack (or console): summary, likely cause, top 3 checks
 ```
 
-**What to cover:**
-
-- Designing prompts for incident analysis — what context to include, how to structure it
-- Handling rate limits and timeouts gracefully (incidents happen at bad times)
-- Structured output — getting JSON back from LLMs, not freeform text
-- Knowing when to trust AI diagnosis vs escalate to a human
-- Feedback loops — collecting engineer ratings on AI suggestions to improve prompts
+Rules of the road:
+- Never crash if Loki is down — post what you have
+- Prefer JSON from the model, not free-form essays
+- AI suggests; humans approve rollbacks
 
 ---
 
-### 6. ChatOps — LLM bots in Slack and Teams
+### 6. ChatOps (slash commands)
 
-ChatOps is the practice of doing operational work through chat. With LLMs, your Slack bot goes from "show me pod status" to "what's wrong with payments and what should I do about it?"
-
-**What to cover:**
-
-- Slack Bot API — event subscriptions, slash commands, interactive components
-- Building a bot that responds to natural language operational queries
-- Slash commands for common ops tasks: `/deploy`, `/rollback`, `/status`
-- Modal forms for structured actions (safer than freeform text)
-- Approval workflows — bot proposes action, human approves, bot executes
-- Audit logging — every action taken through the bot, by whom, when
-
-**Example interactions your bot should handle:**
-
-```
-Engineer: "what's wrong with the payments service?"
-Bot: queries Prometheus + Loki, asks LLM, responds:
-     "Payments service is showing elevated error rate (4.2%, threshold 5%).
-      Root cause appears to be timeouts to the Stripe API — 47 timeout errors
-      in the last 30 minutes. No recent deployments. Recommend checking
-      Stripe status page and reviewing circuit breaker configuration."
-
-Engineer: "show me the last 5 deploys to production"
-Bot: queries ArgoCD or git log, formats response as a table
-
-Engineer: "rollback payments-service to the previous version"
-Bot: shows what the rollback would do, asks for confirmation
-     After approval: executes ArgoCD rollback, confirms success
-```
-
-**Recommended resources:**
-- [Slack API docs](https://api.slack.com/docs)
-- [Slack Bolt for Python](https://slack.dev/bolt-python/concepts) — the easiest way to build Slack bots
+Once the webhook path works, add `/status`, `/logs`, `/deploys`, `/rollback`. Rollback must be **two-step** (show plan → confirm). Never auto-execute destructive actions from a model suggestion alone.
 
 ---
 
-### 7. Evaluating and trusting AI output
+### 7. Trust — the part people skip
 
-This is the most important section in the phase and the one most people skip. AI makes confident-sounding mistakes. In DevOps, a confident mistake can take down production.
+Confident nonsense takes down prod.
 
-**A framework for trusting AI output:**
+| Stakes | Rule |
+|---|---|
+| Low (docs, explanations) | Light review |
+| Medium (Terraform, manifests) | `plan` / dry-run / validate |
+| High (IAM, prod deploy, irreversible) | Human sign-off always |
 
-```
-Low stakes — auto-trust:
-  Documentation, explanations, first drafts of non-critical code
-  → Review quickly, apply if it looks reasonable
+**Red flags:** `*` IAM, `0.0.0.0/0`, hardcoded secrets, `force_destroy`, missing limits, `privileged: true`.
 
-Medium stakes — verify before applying:
-  Terraform code, pipeline YAML, Kubernetes manifests
-  → Run terraform plan, dry-run the pipeline, validate the manifest
-  → Check for obvious security issues (overly permissive IAM, exposed ports)
+**Prompt injection:** if the bot feeds logs into an LLM, malicious log lines can try to hijack the model. Sanitize inputs; never let the bot run arbitrary shell from model output.
 
-High stakes — always human review:
-  IAM policies and security group rules
-  Database schema changes
-  Production deployment approvals
-  Anything that can't be easily rolled back
-  → AI can assist and draft, but a human must sign off
-```
-
-**Red flags in AI-generated infrastructure code:**
-- IAM policies with `*` actions or resources
-- `0.0.0.0/0` in security group ingress rules
-- Hardcoded credentials or secrets (even as examples)
-- `force_destroy = true` on storage resources
-- Missing resource limits on Kubernetes containers
-- `privileged: true` in pod security contexts
-
-**Prompt injection in operational contexts:**  
-If your AI bot reads logs or user input before passing to an LLM, an attacker can craft log entries that manipulate the LLM. Always sanitise inputs and never give AI bots the ability to execute arbitrary commands.
+→ [Trust cheatsheet](./cheatsheets/trusting-ai-output.md)
 
 ---
 
 ## Capstone project
 
-### AI-powered incident response system
+### AI-powered incident response bot
 
-Build a Slack bot that automatically assembles incident context and provides AI-powered diagnosis when an alert fires. This is the project that will genuinely impress in interviews — it's a real system that solves a real problem.
+Build a bot that turns an Alertmanager webhook into a useful diagnosis. Interview gold — it's a real problem, not a toy.
 
----
+**Starter:** [projects/incident-response-bot/](./projects/incident-response-bot/)
 
-**Architecture:**
+| Path | What you need | Outcome |
+|---|---|---|
+| **A — Local / mock (start here)** | API key only | Webhook → mock metrics/logs → LLM → terminal output |
+| **B — Real observability** | Phase 02 Compose stack | Same bot, real Loki/Prometheus |
+| **C — Slack + slash commands** | Slack app | Posts to `#incidents`, `/status` etc. |
 
-```
-Alertmanager/Prometheus
-        ↓ webhook
-  Incident Bot (Python)
-        ↓ queries
-  ┌─────────────────────────┐
-  │  Loki  Prometheus  k8s  │  ← context gathering
-  └─────────────────────────┘
-        ↓ structured prompt
-    Claude / OpenAI API
-        ↓ analysis
-    Slack channel
-        ↓ human approves
-  Optional: ArgoCD rollback
-```
-
----
-
-**Part 1 — Build the incident bot**
-
-The bot lives in `projects/incident-response-bot/`. It must:
-
-- [ ] Expose a `/webhook` endpoint that receives Alertmanager webhook payloads
-- [ ] On receiving an alert, automatically gather:
-  - Last 30 minutes of error-level logs from Loki for the affected service
-  - Current error rate and p99 latency from Prometheus for the affected service
-  - Last 5 deployments from ArgoCD or git log
-  - Recent pod events from Kubernetes (`kubectl get events`)
-- [ ] Send assembled context to the Claude API with a structured prompt
-- [ ] Post the AI analysis to a Slack channel with:
-  - Alert name and severity
-  - AI-generated summary (2–3 sentences)
-  - Top 3 likely causes (ranked)
-  - Recommended immediate actions
-  - Link to the relevant runbook (if one exists)
-- [ ] Handle failures gracefully — if Loki is down, post without logs, don't crash
-
----
-
-**Part 2 — Add the AI PR review pipeline**
-
-- [ ] Add a GitHub Actions workflow that runs on every PR
-- [ ] The workflow diffs the PR, sends it to the Claude API with a review prompt
-- [ ] Posts the review as a PR comment via the GitHub API
-- [ ] The review must flag: security issues, missing resource limits, hardcoded values, and obvious bugs
-
----
-
-**Part 3 — Add slash commands to the bot**
-
-Extend the Slack bot with these slash commands:
-
-- [ ] `/status <service>` — shows current health (error rate, latency, pod count)
-- [ ] `/logs <service> <minutes>` — shows last N minutes of error logs
-- [ ] `/deploys <service>` — shows last 5 deployments with timestamps and authors
-- [ ] `/rollback <service>` — shows what a rollback would do, asks for confirmation before executing
-
----
-
-**Part 4 — Prompt library**
-
-Create a `prompts/` folder with the prompt templates your bot uses, as plain text files. Each prompt should have:
-- A comment explaining what it does
-- The actual prompt template with `{variable}` placeholders
-- An example of good output
-
-This matters because prompts are code — they should be version controlled, reviewed, and improved over time.
-
----
+**Parts:**
+1. Webhook + context gather + LLM analysis (+ mock mode)
+2. AI PR review GitHub Action
+3. Slash commands (Path C)
+4. Version-controlled prompts under `prompts/`
 
 **Definition of done:**
-
-- [ ] Bot receives Alertmanager webhook and posts to Slack within 30 seconds
-- [ ] Slack message includes AI-generated diagnosis with at least one specific recommendation
-- [ ] `/status` slash command works and returns real data
+- [ ] `curl` the webhook and get a diagnosis (console or Slack) within ~30s
+- [ ] Diagnosis includes summary + at least one concrete next check
+- [ ] Downstream failure (mock Loki down) does not crash the bot
 - [ ] AI PR review posts a comment on a test PR
-- [ ] All prompts are in `prompts/` as version-controlled files
-- [ ] Bot handles downstream failures gracefully (Loki down, Prometheus timeout)
-- [ ] A `README.md` explains how to run the bot locally and how to deploy it
+- [ ] Prompts live in `prompts/` as files you can diff in Git
+- [ ] README explains Path A / B / C
 
-**Stretch goals:**
-- Add feedback buttons to the Slack message ("Was this helpful? 👍 👎") and log responses
-- Build a weekly digest: "Last week's incidents — AI summary of patterns and recurring issues"
-- Add `/ask` command: freeform natural language question about your infrastructure
+Full walkthrough → [projects/incident-response-bot/README.md](./projects/incident-response-bot/README.md)
 
 ---
 
-## How to know you're ready for Phase 04
+## Ready for Phase 04?
 
-Do not move on until you can do all of the following:
+Don't move on until you can do these **without googling**:
 
-- Write a prompt that generates a correct, production-safe Kubernetes Deployment manifest for a service you describe
-- Explain what few-shot prompting is and give an example of when it produces better results than zero-shot
-- Build a Python script that calls the Claude or OpenAI API, sends context, and parses a structured JSON response
-- Identify at least three red flags to look for in AI-generated Terraform or Kubernetes code
-- Explain prompt injection and why it matters specifically in operational AI bots
-- Demo a working Slack command that queries real infrastructure data and returns a useful response
+1. Prompt a safe K8s Deployment for a service you describe
+2. Explain few-shot with a DevOps example
+3. Call an LLM API and parse JSON
+4. List three AI infra red flags
+5. Explain prompt injection for ops bots
+6. Demo webhook → diagnosis (even if Slack is still mock/console)
 
-If any of those trips you up, go back and spend more time. Phase 04 involves running actual LLM workloads as infrastructure — you need to be comfortable with the API layer before you manage the GPU layer.
-
----
-
-## Resources summary
-
-| Resource | Type | Cost | Link |
-|---|---|---|---|
-| Anthropic prompt engineering guide | Docs | Free | [docs.anthropic.com](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview) |
-| OpenAI prompt engineering guide | Docs | Free | [platform.openai.com/docs](https://platform.openai.com/docs/guides/prompt-engineering) |
-| Claude API docs | Docs | Free | [docs.anthropic.com](https://docs.anthropic.com/en/api/getting-started) |
-| OpenAI API docs | Docs | Free | [platform.openai.com](https://platform.openai.com/docs/api-reference) |
-| GitHub Copilot docs | Docs | Free | [docs.github.com/copilot](https://docs.github.com/en/copilot) |
-| Slack Bolt for Python | Docs | Free | [slack.dev/bolt-python](https://slack.dev/bolt-python/concepts) |
-| Prompt injection explained | Article | Free | [learnprompting.org](https://learnprompting.org/docs/prompt_hacking/injection) |
-| LangChain docs | Docs | Free | [python.langchain.com](https://python.langchain.com/docs/get_started/introduction) |
+Phase 04 is GPUs and model serving. Get comfortable calling models first.
 
 ---
 
-## Community & tracking
+## Resources
 
-Open an issue with `[Phase 03] Starting` when you begin and `[Phase 03] Done` when you complete the capstone. When you post Done, share:
-- A screenshot of your Slack bot responding to an alert
-- A screenshot of the AI PR review comment on a pull request
-- The GitHub repo link
-- The prompt you're most proud of — paste it in the issue
+| Resource | What it's for |
+|---|---|
+| [Anthropic prompt guide](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview) | Prompt patterns |
+| [OpenAI prompt guide](https://platform.openai.com/docs/guides/prompt-engineering) | Same, OpenAI flavour |
+| [Claude API](https://docs.anthropic.com/en/api/getting-started) / [OpenAI API](https://platform.openai.com/docs/api-reference) | Capstone calls |
+| [Slack Bolt Python](https://slack.dev/bolt-python/concepts) | Path C Slack apps |
+| [Prompt injection](https://learnprompting.org/docs/prompt_hacking/injection) | Security must-read |
+| Repo cheatsheets | Day-to-day lookup |
+
+---
+
+## Track your progress
+
+```
+[Phase 03] Starting — your-handle
+[Phase 03] Done — your-handle
+```
+
+When Done, share: bot output screenshot, PR review comment, and the prompt you're proudest of.
 
 ---
 
