@@ -1,0 +1,8 @@
+.git
+out/
+*.key
+cosign.key
+__pycache__/
+*.pyc
+.venv/
+.env
