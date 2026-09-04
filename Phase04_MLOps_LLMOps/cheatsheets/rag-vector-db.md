@@ -1,5 +1,10 @@
 # RAG & vector database cheatsheet
 
+**Use this when:** the model shouldn't invent answers from private runbooks — you retrieve chunks, then generate with citations.  
+**Rule of thumb:** empty retrieval → say you don't know. Never "helpfully" guess kubectl.
+
+Phase 04 Path A uses a tiny hash embedder so Docker stays light. Treat that as scaffolding; the pipeline shape is the same when you swap in real embeddings.
+
 ---
 
 ## Pipeline
