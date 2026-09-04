@@ -4,8 +4,8 @@
 
 Most learning paths are tool lists. This one is a **career arc**: **ten phases (00–09)** that build on each other, each ending in something real you ship.
 
-**Available now (full guides + projects):** Phases 00–04  
-**Coming soon (brief teasers):** Phases 05–09
+**Available now (full guides + projects):** Phases 00–05  
+**Coming soon (brief teasers):** Phases 06–09
 
 ```
 Phase 00  Linux, Bash, Python, Git          →  server health reporter
@@ -53,7 +53,7 @@ Each phase has a **self-check**. If you pass it, skip ahead.
 | [02 — Cloud Native Ops](./Phase02_Cloud_Native_Operations/README.md) | Prometheus, Grafana, OTel, ArgoCD, SLOs | [Observability stack](./Phase02_Cloud_Native_Operations/projects/observability-stack/) | ✅ Available |
 | [03 — AI-Augmented DevOps](./Phase03_AI_Augmented_DevOps/README.md) | Prompts, AI in CI, ChatOps | [Incident response bot](./Phase03_AI_Augmented_DevOps/projects/incident-response-bot/) | ✅ Available |
 | [04 — MLOps & LLMOps](./Phase04_MLOps_LLMOps/README.md) | vLLM, RAG, GPUs, model monitoring | [LLM inference platform](./Phase04_MLOps_LLMOps/projects/llm-inference-platform/) | ✅ Available |
-| [05 — DevSecOps](./Phase05_DevSecOps/README.md) | SAST/SCA, image scan, signing, policy-as-code | Secure pipeline lab (planned) | 🔜 Teaser |
+| [05 — DevSecOps](./Phase05_DevSecOps/README.md) | SCA, image scan, SBOM, signing, policy-as-code | [Secure pipeline lab](./Phase05_DevSecOps/projects/secure-pipeline-lab/) | ✅ Available |
 | [06 — Platform Engineering](./Phase06_Platform_Engineering/README.md) | Golden paths, IDPs, paved roads, multi-tenancy | Golden-path template (planned) | 🔜 Teaser |
 | [07 — AIOps](./Phase07_AIOps_Autonomous_Operations/README.md) | Anomaly detection, self-healing, predictive scale | Self-healing demo (planned) | 🔜 Teaser |
 | [08 — Agentic Infrastructure](./Phase08_Agentic_Infrastructure/README.md) | Tool-using agents, approvals, evals | Gated ops agent (planned) | 🔜 Teaser |
@@ -132,7 +132,7 @@ devops-to-ai/
 
 ## Contributing
 
-Issues and PRs welcome — especially capstone starters for Phases 05–09, cheatsheets, and corrections. This roadmap is opinionated; open an issue before large structural changes.
+Issues and PRs welcome — especially capstone starters for Phases 06–09, cheatsheets, and corrections. This roadmap is opinionated; open an issue before large structural changes.
 
 ---
 
