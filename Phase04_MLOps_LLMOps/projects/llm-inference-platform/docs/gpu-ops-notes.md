@@ -1,5 +1,8 @@
 # GPU utilisation notes — Phase 04
 
+**Use this when:** Path B (real GPU) or you're studying capacity for interviews.  
+**Path A:** still skim the tables — the questions matter even if you only ran mock.
+
 Operators often discover too late that "GPU util 100%" is not the same as
 "serving is healthy."
 
