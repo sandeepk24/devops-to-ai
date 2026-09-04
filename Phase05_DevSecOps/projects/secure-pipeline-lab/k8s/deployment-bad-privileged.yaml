@@ -1,0 +1,26 @@
+# INTENTIONALLY BAD — for Path A check_manifests.sh and Path B Kyverno deny demos.
+# Do not deploy this to a shared cluster.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-lab-bad
+  labels:
+    app: secure-lab-bad
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: secure-lab-bad
+  template:
+    metadata:
+      labels:
+        app: secure-lab-bad
+    spec:
+      containers:
+        - name: api
+          image: secure-lab:local
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          ports:
+            - containerPort: 8080
