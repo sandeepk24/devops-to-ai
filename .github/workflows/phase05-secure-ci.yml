@@ -1,0 +1,78 @@
+# Phase 05 — secure CI gates for the secure-pipeline-lab
+# Fails on HIGH/CRITICAL. Path filters keep it from running on unrelated phases.
+
+name: phase05-secure-ci
+
+on:
+  push:
+    paths:
+      - "Phase05_DevSecOps/projects/secure-pipeline-lab/**"
+      - ".github/workflows/phase05-secure-ci.yml"
+  pull_request:
+    paths:
+      - "Phase05_DevSecOps/projects/secure-pipeline-lab/**"
+      - ".github/workflows/phase05-secure-ci.yml"
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: Phase05_DevSecOps/projects/secure-pipeline-lab
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: pip-audit (SCA)
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          pip-audit -r requirements.txt
+
+      - name: Build image
+        run: docker build -t secure-lab:ci .
+
+      - name: Trivy FS
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          scan-type: fs
+          scan-ref: Phase05_DevSecOps/projects/secure-pipeline-lab
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+      - name: Trivy image
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          scan-type: image
+          image-ref: secure-lab:ci
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+      - name: Generate SBOM
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          scan-type: image
+          image-ref: secure-lab:ci
+          format: spdx-json
+          output: Phase05_DevSecOps/projects/secure-pipeline-lab/out/sbom.spdx.json
+          exit-code: "0"
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-spdx
+          path: Phase05_DevSecOps/projects/secure-pipeline-lab/out/sbom.spdx.json
+
+      - name: Manifest policy check (local)
+        run: |
+          chmod +x scripts/*.sh
+          ./scripts/check_manifests.sh k8s/deployment-good.yaml
+          if ./scripts/check_manifests.sh k8s/deployment-bad-privileged.yaml; then
+            echo "bad manifest should fail"
+            exit 1
+          fi
