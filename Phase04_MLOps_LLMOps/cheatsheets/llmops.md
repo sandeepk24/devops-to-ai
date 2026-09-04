@@ -1,6 +1,9 @@
 # LLMOps cheatsheet
 
-Quick reference for running LLM workloads as infrastructure.
+**Use this when:** you're operating a chat/completions API, reading gateway metrics, or deciding whether to promote a canary.  
+**Rule of thumb:** if you only watch "is the pod up?", you'll miss slow TTFT and silent quality drops.
+
+Keep this open while you run the Phase 04 compose stack — the PromQL snippets match the gateway metric names.
 
 ---
 
