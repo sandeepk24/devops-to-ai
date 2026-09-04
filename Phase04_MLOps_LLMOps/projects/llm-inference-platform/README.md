@@ -1,125 +1,138 @@
-# Project: LLM inference platform with RAG
+# Capstone: LLM inference platform with RAG
 
-> Phase 04 capstone — build this before moving to Phase 05 (DevSecOps).
+> **Phase 04 project** — finish this before [Phase 05](../../../Phase05_DevSecOps/README.md).  
+> Phase guide: [Phase 04 README](../../README.md)
 
-An OpenAI-compatible inference gateway in front of a model server, plus a RAG service backed by Qdrant, with Prometheus metrics you can actually operate on. Works with real **vLLM** on a GPU, or with the included **mock inference** backend on a laptop.
+You're going to run an OpenAI-compatible API *you* control: gateway in front, model (or mock) behind, optional RAG over ops docs, and Grafana so you can see load. That's the LLMOps loop — not fine-tuning Llama from scratch.
 
 ---
 
-## What's in this project
+## Paths
+
+| Path | Needs | What you prove |
+|---|---|---|
+| **A — Mock (start here)** | Docker Compose | Full platform shape on a laptop |
+| **B — vLLM** | NVIDIA GPU + Container Toolkit | Same gateway/RAG against a real engine |
+
+**Do Path A completely.** Add Path B if you have hardware and time.
+
+---
+
+## What's in this folder
 
 ```
 llm-inference-platform/
 ├── docker-compose.yml
 ├── .env.example
-├── prompts/
-│   ├── rag_system_v1.txt
-│   └── gateway_system_v1.txt
 ├── services/
-│   ├── inference-gateway/     ← auth, rate limits, routing, metrics
-│   ├── rag-service/           ← chunk → embed → retrieve → generate
-│   └── mock-inference/        ← CPU-friendly OpenAI-compatible stub
-├── config/
-│   ├── prometheus/prometheus.yml
-│   └── grafana/               ← datasource + dashboard provisioning
-├── k8s/                       ← optional GPU Deployment sketches
-├── scripts/
-│   ├── smoke_test.sh
-│   ├── eval_rag.py
-│   └── generate_load.sh
-├── data/
-│   ├── corpus/                ← sample ops docs for RAG ingest
-│   └── eval/golden_set.jsonl  ← retrieval eval cases
+│   ├── mock-inference/      ← CPU stub (OpenAI-compatible)
+│   ├── inference-gateway/   ← auth, rate limits, canary, metrics
+│   └── rag-service/         ← ingest → retrieve → generate
+├── config/                  ← Prometheus + Grafana
+├── prompts/                 ← versioned system prompts
+├── data/corpus/             ← sample ops docs
+├── data/eval/               ← golden retrieval questions
+├── scripts/                 ← smoke_test, eval_rag, generate_load
+├── k8s/                     ← optional GPU sketches
+└── docs/gpu-ops-notes.md
 ```
 
 ---
 
-## Quick start (CPU / mock)
+## Path A — first win (~15 minutes)
 
 ```bash
-# 1. Copy environment
+cd Phase04_MLOps_LLMOps/projects/llm-inference-platform
+
 cp .env.example .env
+docker compose up --build -d
 
-# 2. Start the stack
-docker compose up --build
+# Wait until healthy, then:
+./scripts/smoke_test.sh
+```
 
-# 3. Chat completion via the gateway
+Manual checks:
+
+```bash
+# Chat via gateway
 curl -s http://localhost:8080/v1/chat/completions \
   -H "Authorization: Bearer dev-key" \
   -H "Content-Type: application/json" \
-  -d '{
-    "model": "mock-model",
-    "messages": [{"role": "user", "content": "What is continuous batching?"}],
-    "max_tokens": 128
-  }' | jq .
+  -d '{"model":"mock-model","messages":[{"role":"user","content":"What is TTFT?"}],"max_tokens":64}' | jq .
 
-# 4. RAG query (after corpus ingest — see rag-service README tasks)
+# Ingest corpus then ask RAG
+curl -s -X POST http://localhost:8081/v1/rag/ingest | jq .
 curl -s http://localhost:8081/v1/rag/query \
   -H "Content-Type: application/json" \
-  -d '{"question": "How do we roll back a bad model canary?"}' | jq .
+  -d '{"question":"How do we roll back a bad model canary?"}' | jq .
 ```
 
-Prometheus: http://localhost:9090  
-Grafana: http://localhost:3000 (admin / admin)  
-Qdrant UI: http://localhost:6333/dashboard  
+**UIs:** Grafana http://localhost:3000 (admin/admin) · Prometheus http://localhost:9090 · Qdrant http://localhost:6333/dashboard
+
+Populate panels: `./scripts/generate_load.sh`
 
 ---
 
-## GPU path (vLLM)
+## What already works (Path A)
 
-If you have an NVIDIA GPU and the NVIDIA Container Toolkit installed:
+You should **not** rewrite these from scratch on day one — run them, read them, then harden:
 
-1. Set `INFERENCE_URL=http://vllm:8000` in `.env`
-2. Uncomment the `vllm` service in `docker-compose.yml`
-3. Stop or leave `mock-inference` unused
-4. Pull a model that fits your VRAM (start with a 7B instruct model)
-
-Record TTFT and tokens/sec for three prompts in your project notes — interview gold.
+- [x] Mock OpenAI-compatible inference
+- [x] Gateway: Bearer auth, RPM limits → 429, proxy, canary header/`CANARY_PERCENT`, `/metrics`, `/ready`
+- [x] RAG: ingest markdown corpus, retrieve, call gateway, return `answer` + `sources`
+- [x] Prometheus scrape + Grafana dashboard JSON
+- [x] `smoke_test.sh` and `eval_rag.py`
 
 ---
 
-## Your tasks
+## Your tasks (level up)
 
-Complete the `TODO` sections marked in the service code:
+### Understand & operate
+- [ ] Read `services/inference-gateway/main.py` — know how 401/429/502 happen
+- [ ] Read `services/rag-service/main.py` — know chunk → embed → search → generate
+- [ ] Break upstream (`docker compose stop mock-inference`) and confirm gateway stays up with 502/503
+- [ ] Lower `RATE_LIMIT_RPM` in `.env` and prove 429s
+- [ ] Run `python scripts/eval_rag.py` and note pass/fail
 
-### Gateway
-- [ ] API key authentication
-- [ ] Per-key rate limiting (429 when exceeded)
-- [ ] Proxy to upstream `/v1/chat/completions`
-- [ ] Canary routing via `X-Model-Version: canary`
-- [ ] Prometheus metrics (`/metrics`)
-- [ ] `/health` and `/ready` (ready fails if upstream is down)
+### Document rollouts
+- [ ] Send a request with `X-Model-Version: canary` and explain what the gateway does
+- [ ] Write 5–10 lines in your fork README: when you'd roll back a canary (latency, errors, eval drop)
+- [ ] Note whether you used **mock** or **vLLM**
 
-### RAG service
-- [ ] Corpus ingest into Qdrant
-- [ ] Embedding + top-k retrieval
-- [ ] Grounded generation through the gateway
-- [ ] Return `answer` + `sources[]`
-- [ ] Empty-retrieval fallback message
+### Stretch
+- [ ] Path B: uncomment `vllm` in Compose, point `INFERENCE_URL` at it, record TTFT for 3 prompts
+- [ ] Swap hash embeddings for `sentence-transformers` (see TODO in rag-service)
+- [ ] Add OTel traces gateway → RAG → inference
+- [ ] Apply/adapt `k8s/inference.yaml` on a GPU node
 
-### Ops
-- [ ] Confirm Grafana dashboard shows live RPS / latency / errors
-- [ ] Run `scripts/smoke_test.sh` green
-- [ ] Run a tiny eval with `scripts/eval_rag.py`
-- [ ] Document rollback steps for canary → stable
+---
+
+## Path B — GPU / vLLM (optional)
+
+1. NVIDIA driver + [Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+2. Set in `.env`: `INFERENCE_URL=http://vllm:8000` (and matching canary URL if used)
+3. Uncomment the `vllm` service in `docker-compose.yml`
+4. Pick a model that fits VRAM (start small, e.g. 7B instruct)
+5. Re-run smoke tests; keep notes on latency vs mock
+
+If the GPU path fights you for a day, **stop and finish Path A well**. Interviewers care that you understand the gateway and RAG loop.
 
 ---
 
 ## Definition of done
 
-- [ ] Gateway returns completions through the configured upstream
-- [ ] RAG answers cite at least one source from `data/corpus/`
-- [ ] Excess traffic gets HTTP 429
-- [ ] Upstream down → gateway returns 502/503, process stays up
-- [ ] Metrics visible in Prometheus/Grafana
-- [ ] Prompts versioned under `prompts/`
-- [ ] README notes whether you used mock or vLLM
+- [ ] `docker compose up` healthy; `./scripts/smoke_test.sh` passes (or you documented one soft WARN)
+- [ ] Chat completion through the gateway works
+- [ ] RAG answer cites at least one `data/corpus/` source
+- [ ] Grafana (or Prometheus) shows gateway request metrics after load
+- [ ] You can explain 401 / 429 / 502 behaviour without guessing
+- [ ] Prompts remain under `prompts/` in Git
+- [ ] Your notes say mock vs vLLM
 
 ---
 
-## Sharing your work
+## Sharing
 
-Open a `[Phase 04] Done` issue on the devops-to-ai repo. Include:
-- Dashboard screenshot
-- One RAG answer with citations
-- Mock vs vLLM note
+Open `[Phase 04] Done` on [devops-to-ai](https://github.com/sandeepk24/devops-to-ai) with a dashboard screenshot and one cited RAG answer.
+
+→ [Phase 05 — DevSecOps](../../../Phase05_DevSecOps/README.md)
