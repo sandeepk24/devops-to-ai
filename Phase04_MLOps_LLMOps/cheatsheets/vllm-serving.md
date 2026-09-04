@@ -1,6 +1,9 @@
 # vLLM & model serving cheatsheet
 
-Practical commands and knobs for serving open models.
+**Use this when:** Path B — you have an NVIDIA GPU and want a real OpenAI-compatible server behind the Phase 04 gateway.  
+**Rule of thumb:** finish the mock path first. If you're fighting drivers for a day, go back to mock and learn the gateway.
+
+No GPU? Skip this file until you need it. The gateway speaks the same API either way.
 
 ---
 
