@@ -42,8 +42,8 @@
 
 | Thing | Why | Notes |
 |---|---|---|
-| Docker | Build images + run Trivy without a local install | Same as Phase 01 |
-| GitHub account (optional) | See Actions gates on a PR | Workflow file is in the lab |
+| Docker (running) | Build images + run Trivy without a local install | `docker info` must work |
+| GitHub account (optional) | See Actions gates on a PR | Workflow: `.github/workflows/phase05-secure-ci.yml` |
 | kind/k3d + kubectl (optional) | Path B admission policy | After Path A is solid |
 | Phase 01 comfort | Dockerfile + CI basics | Soft gate, not a quiz |
 
@@ -137,9 +137,9 @@ Sometimes you must ship with a known CVE (no fix yet, compensating control). Tra
 | **A — Laptop (start here)** | Docker | Scan app + image, SBOM, catch bad manifest locally |
 | **B — Cluster** | kind/k3d + Kyverno | Policy blocks privileged Deployment on apply |
 
-**Already wired for Path A:** small API + Dockerfile, Trivy/SBOM scripts, good vs privileged manifests, GitHub Actions workflow stub, local policy checker.
+**Already wired for Path A:** small API + Dockerfile, Trivy/SBOM scripts, good vs privileged manifests, local policy checker, and repo-root Actions workflow (`phase05-secure-ci`).
 
-**Your job:** run the scans, make a gate fail on purpose, fix it, document signing (or do Cosign stretch), and know *why* the privileged manifest is rejected.
+**Your job:** run the scans, break a gate on purpose (privileged manifest or the vuln demo fixture), put it back, and know *why* the privileged YAML is rejected. Cluster + Cosign are stretch — finish the laptop path first.
 
 Full walkthrough → [projects/secure-pipeline-lab/README.md](./projects/secure-pipeline-lab/README.md)
 
