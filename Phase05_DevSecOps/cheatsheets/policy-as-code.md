@@ -42,9 +42,9 @@ Dry-run habit: install Kyverno → `kubectl apply --dry-run=server` or Kyverno's
 
 ## Path A without a cluster
 
-The lab's `scripts/check_manifests.sh` greps/parses manifests for `privileged: true`. That is **not** a replacement for admission control — it's a teaching brake so you can fail fast on a laptop.
+The lab's `scripts/check_manifests.sh` greps manifests for `privileged: true`. That is **not** a replacement for admission control — it's a teaching brake so you can fail fast on a laptop.
 
-Path B: install Kyverno on kind/k3d and `kubectl apply -f k8s/deployment-bad-privileged.yaml` — expect deny.
+Path B: install Kyverno on kind/k3d, run `./scripts/wait_kyverno.sh`, apply `policy/disallow-privileged.yaml`, then `kubectl apply -f k8s/deployment-bad-privileged.yaml` — expect deny.
 
 ---
 
