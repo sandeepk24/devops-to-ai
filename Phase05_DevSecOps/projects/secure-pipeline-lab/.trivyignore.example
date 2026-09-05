@@ -1,0 +1,7 @@
+# Copy to .trivyignore ONLY while a matching row exists in docs/exceptions.md.
+# Format: one CVE (or Trivy finding ID) per line. Delete lines when fixed.
+#
+# Example:
+# CVE-2024-NNNNN
+
+# (empty on purpose — Path A should stay green without silent ignores)
