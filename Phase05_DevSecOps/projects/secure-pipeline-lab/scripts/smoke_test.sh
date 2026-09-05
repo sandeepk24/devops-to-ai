@@ -3,7 +3,11 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=./_common.sh
+source "$ROOT/scripts/_common.sh"
 cd "$ROOT"
+
+require_docker
 
 IMAGE="${IMAGE:-secure-lab:local}"
 
@@ -25,4 +29,4 @@ if ./scripts/check_manifests.sh k8s/deployment-bad-privileged.yaml; then
 fi
 echo "bad manifest correctly rejected"
 
-echo "SMOKE OK"
+echo "SMOKE OK — Path A complete. Read the project README for CI + Path B next."

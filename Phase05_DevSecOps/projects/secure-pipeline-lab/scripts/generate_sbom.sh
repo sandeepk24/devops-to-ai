@@ -3,14 +3,19 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=./_common.sh
+source "$ROOT/scripts/_common.sh"
 cd "$ROOT"
+
+require_docker
 
 IMAGE="${IMAGE:-secure-lab:local}"
 TRIVY_IMAGE="${TRIVY_IMAGE:-aquasec/trivy:0.58.1}"
 mkdir -p out
 
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
-  echo "Image ${IMAGE} not found. Build first: docker build -t ${IMAGE} ."
+  echo "ERROR: image ${IMAGE} not found."
+  echo "Build first: docker build -t ${IMAGE} ."
   exit 1
 fi
 
@@ -23,4 +28,5 @@ docker run --rm \
   --output /out/sbom.spdx.json \
   "$IMAGE"
 
-echo "SBOM OK ($(wc -c < out/sbom.spdx.json) bytes)"
+echo "SBOM OK ($(wc -c < out/sbom.spdx.json | tr -d ' ') bytes)"
+echo "Tip: search that file for a package name when the next big CVE drops."
