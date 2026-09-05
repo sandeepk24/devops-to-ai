@@ -54,10 +54,29 @@ Ask, in order:
 
 ---
 
+## Stuck on Path A?
+
+| Symptom | Try this |
+|---|---|
+| Docker daemon errors | Start Docker Desktop; `docker info` |
+| Image not found | `docker build -t secure-lab:local .` from the lab folder |
+| First Trivy run is slow | Normal — image + DB download; re-run once |
+| Base image CVE noise | Upgrade the base tag, or temporary row in `docs/exceptions.md` |
+
+Demo a failing SCA check without breaking the main app:
+
+```bash
+pip-audit -r fixtures/requirements-vuln-demo.txt
+```
+
+Then keep using `requirements.txt` for builds.
+
+---
+
 ## Common footguns
 
 - Scanning `python:latest` locally but shipping a different digest in prod
-- Ignoring `.trivyignore` growth with no tickets
+- Ignoring `.trivyignore` growth with no tickets (use `.trivyignore.example` as a template)
 - Only scanning `main` — vulns land on feature branches too
 - Treating "0 vulnerabilities" as "secure" (logic bugs, bad IAM, and secrets still exist)
 
