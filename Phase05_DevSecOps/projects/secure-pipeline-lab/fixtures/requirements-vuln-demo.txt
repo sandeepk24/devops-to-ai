@@ -1,0 +1,12 @@
+# INTENTIONAL DEMO FILE — do not use this as your main requirements.txt
+#
+# Goal: let juniors see an SCA tool fail on purpose, then go back to the clean file.
+# These pins are old on purpose. Run:
+#
+#   pip-audit -r fixtures/requirements-vuln-demo.txt
+#
+# Expect findings. Then keep using ../requirements.txt for real builds.
+
+fastapi==0.70.0
+uvicorn==0.15.0
+pydantic==1.8.2
