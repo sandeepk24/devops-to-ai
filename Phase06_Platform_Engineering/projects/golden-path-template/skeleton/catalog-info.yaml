@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: __SERVICE_NAME__
+  description: Service scaffolded from the Phase 06 golden path
+  tags:
+    - python
+    - http
+    - golden-path
+  annotations:
+    github.com/project-slug: your-org/__SERVICE_NAME__
+spec:
+  type: service
+  lifecycle: experimental
+  owner: user:default/platform-learners
+  system: demo-platform

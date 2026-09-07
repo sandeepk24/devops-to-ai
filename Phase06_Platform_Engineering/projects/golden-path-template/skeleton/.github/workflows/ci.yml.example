@@ -1,0 +1,34 @@
+# Example CI shape for services scaffolded from the golden path.
+# When you extract a service to its own repo, copy this to .github/workflows/ci.yml
+# and adjust paths. In this monorepo lab, treat it as documentation + homework.
+
+name: __SERVICE_NAME__-ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Import check
+        run: python -c "from app.main import app; print(app.title)"
+
+      - name: Build image
+        run: docker build -t __SERVICE_NAME__:ci .
+
+      # Stretch (Phase 05): add Trivy / pip-audit here so the paved road stays safe.
