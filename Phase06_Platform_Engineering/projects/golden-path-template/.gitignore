@@ -1,0 +1,9 @@
+# Scaffolded services (local) — keep out of git unless you want demos committed
+services/*/
+!services/.gitkeep
+
+__pycache__/
+*.pyc
+.venv/
+.env
+*.tmp
