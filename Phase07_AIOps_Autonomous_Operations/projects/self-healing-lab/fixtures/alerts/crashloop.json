@@ -1,0 +1,6 @@
+{
+  "type": "crashloop",
+  "service": "flappy",
+  "severity": "critical",
+  "message": "flappy is CrashLoopBackOff (mock)"
+}

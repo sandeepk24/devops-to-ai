@@ -1,0 +1,6 @@
+{
+  "type": "high_latency",
+  "service": "flappy",
+  "severity": "warning",
+  "message": "flappy p99 latency elevated (mock) — do not blind-restart"
+}
