@@ -1,0 +1,27 @@
+services:
+  control-plane:
+    build: ./services/control-plane
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  healer:
+    build: ./services/healer
+    ports:
+      - "8091:8091"
+    env_file: .env
+    environment:
+      CONTROL_PLANE_URL: ${CONTROL_PLANE_URL:-http://control-plane:8090}
+      HEALER_MODE: ${HEALER_MODE:-suggest}
+      KILL_SWITCH: ${KILL_SWITCH:-false}
+      ALLOWED_ACTIONS: ${ALLOWED_ACTIONS:-restart_service}
+      COOLDOWN_SECONDS: ${COOLDOWN_SECONDS:-15}
+      MAX_RESTARTS_PER_HOUR: ${MAX_RESTARTS_PER_HOUR:-5}
+      POLL_SECONDS: ${POLL_SECONDS:-2}
+    depends_on:
+      control-plane:
+        condition: service_healthy
