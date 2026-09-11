@@ -1,0 +1,5 @@
+{
+  "type": "high_error_rate",
+  "service": "payments-api",
+  "message": "error rate 18% for 5m"
+}
