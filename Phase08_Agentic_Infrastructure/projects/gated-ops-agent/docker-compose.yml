@@ -1,0 +1,19 @@
+services:
+  ops-agent:
+    build: ./services/ops-agent
+    ports:
+      - "8100:8100"
+    env_file: .env
+    environment:
+      PLANNER_BACKEND: ${PLANNER_BACKEND:-mock}
+      ALLOWED_TOOLS: ${ALLOWED_TOOLS:-get_service_metrics,get_recent_logs,search_runbook,propose_rollback}
+      KILL_SWITCH: ${KILL_SWITCH:-false}
+      APPROVAL_TTL_SECONDS: ${APPROVAL_TTL_SECONDS:-3600}
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
