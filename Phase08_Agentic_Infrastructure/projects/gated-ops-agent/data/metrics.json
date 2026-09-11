@@ -1,0 +1,16 @@
+{
+  "payments-api": {
+    "error_rate": 0.18,
+    "p99_ms": 900,
+    "rps": 120,
+    "window": "5m",
+    "baseline_error_rate": 0.02
+  },
+  "checkout-api": {
+    "error_rate": 0.01,
+    "p99_ms": 120,
+    "rps": 80,
+    "window": "5m",
+    "baseline_error_rate": 0.01
+  }
+}
