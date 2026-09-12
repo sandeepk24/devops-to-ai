@@ -1,0 +1,23 @@
+{
+  "payments-api": {
+    "replicas": 2,
+    "version": "v42",
+    "error_rate": 0.18,
+    "baseline_error_rate": 0.02,
+    "cause": "bad_deploy"
+  },
+  "checkout-api": {
+    "replicas": 2,
+    "version": "v10",
+    "error_rate": 0.20,
+    "baseline_error_rate": 0.01,
+    "cause": "overload"
+  },
+  "inventory-api": {
+    "replicas": 10,
+    "version": "v7",
+    "error_rate": 0.30,
+    "baseline_error_rate": 0.02,
+    "cause": "overload"
+  }
+}
