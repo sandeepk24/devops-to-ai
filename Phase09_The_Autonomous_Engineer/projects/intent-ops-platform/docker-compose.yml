@@ -1,0 +1,20 @@
+services:
+  orchestrator:
+    build: ./services/orchestrator
+    ports:
+      - "8200:8200"
+    env_file: .env
+    environment:
+      KILL_SWITCH: ${KILL_SWITCH:-false}
+      ALLOWED_ENVIRONMENTS: ${ALLOWED_ENVIRONMENTS:-dev,staging}
+      ALLOWED_ACTIONS: ${ALLOWED_ACTIONS:-rollback,scale_replicas}
+      MAX_ATTEMPTS_CAP: ${MAX_ATTEMPTS_CAP:-2}
+      MAX_REPLICAS: ${MAX_REPLICAS:-16}
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8200/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
