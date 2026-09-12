@@ -4,12 +4,12 @@
 from __future__ import annotations
 
 import json
-import sys
+import os
 import urllib.error
 import urllib.request
 from pathlib import Path
 
-AGENT = sys.getenv("AGENT_URL", "http://localhost:8100").rstrip("/")
+AGENT = os.getenv("AGENT_URL", "http://localhost:8100").rstrip("/")
 ROOT = Path(__file__).resolve().parents[1]
 CASES = ROOT / "fixtures" / "eval" / "cases.jsonl"
 INCIDENTS = ROOT / "fixtures" / "incidents"
