@@ -4,8 +4,7 @@
 
 Most learning paths are tool lists. This one is a **career arc**: **ten phases (00–09)** that build on each other, each ending in something real you ship.
 
-**Available now (full guides + projects):** Phases 00–08  
-**Coming soon (brief teasers):** Phase 09
+**All ten phases are available now** — full guides, cheatsheets, and a working capstone for every phase, 00 through 09.
 
 ```
 Phase 00  Linux, Bash, Python, Git          →  server health reporter
@@ -57,7 +56,7 @@ Each phase has a **self-check**. If you pass it, skip ahead.
 | [06 — Platform Engineering](./Phase06_Platform_Engineering/README.md) | Golden paths, IDPs, paved roads, tenancy | [Golden-path template](./Phase06_Platform_Engineering/projects/golden-path-template/) | ✅ Available |
 | [07 — AIOps](./Phase07_AIOps_Autonomous_Operations/README.md) | Detect→act loops, guardrails, suggest-then-auto | [Self-healing lab](./Phase07_AIOps_Autonomous_Operations/projects/self-healing-lab/) | ✅ Available |
 | [08 — Agentic Infrastructure](./Phase08_Agentic_Infrastructure/README.md) | Tool-using agents, approvals, evals | [Gated ops agent](./Phase08_Agentic_Infrastructure/projects/gated-ops-agent/) | ✅ Available |
-| [09 — Autonomous Engineer](./Phase09_The_Autonomous_Engineer/README.md) | Intent → infra, feedback loops | Intent ops platform (planned) | 🔜 Teaser |
+| [09 — Autonomous Engineer](./Phase09_The_Autonomous_Engineer/README.md) | Intent → infra, bounded autonomy, episode memory | [Intent ops platform](./Phase09_The_Autonomous_Engineer/projects/intent-ops-platform/) | ✅ Available |
 
 ---
 
@@ -132,7 +131,7 @@ devops-to-ai/
 
 ## Contributing
 
-Issues and PRs welcome — especially the Phase 09 capstone, cheatsheets, and corrections. This roadmap is opinionated; open an issue before large structural changes.
+Issues and PRs welcome — cheatsheets, corrections, Path B stretch write-ups, and anything that makes a phase easier for the next junior engineer to follow. This roadmap is opinionated; open an issue before large structural changes.
 
 ---
 
