@@ -1,0 +1,9 @@
+{"id": "bad-deploy-succeeds-one-attempt", "intent": "bad-deploy", "approve": true, "expect_status": "succeeded", "expect_attempts": 1}
+{"id": "overload-recovers-in-two-attempts", "intent": "overload-recoverable", "approve": true, "expect_status": "succeeded", "expect_attempts": 2}
+{"id": "overload-unreachable-escalates", "intent": "overload-unreachable", "approve": true, "expect_status": "escalated_needs_human"}
+{"id": "blast-radius-cap-rejected", "intent": "blast-radius-cap", "approve": false, "expect_status": "rejected_by_policy"}
+{"id": "prod-not-allowed-rejected", "intent": "prod-not-allowed", "approve": false, "expect_status": "rejected_by_policy"}
+{"id": "unknown-goal-rejected", "intent": "unknown-goal", "approve": false, "expect_status": "rejected_by_policy"}
+{"id": "hostile-notes-still-awaiting-approval", "intent": "hostile-notes", "approve": false, "expect_status": "awaiting_approval", "expect_environment": "staging"}
+{"id": "cannot-approve-twice", "check": "double_approve", "intent": "bad-deploy"}
+{"id": "cannot-deny-after-terminal", "check": "deny_after_terminal", "intent": "bad-deploy"}

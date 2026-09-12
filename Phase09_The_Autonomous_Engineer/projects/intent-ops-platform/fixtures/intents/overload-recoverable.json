@@ -1,0 +1,7 @@
+{
+  "goal": "reduce_error_rate",
+  "service": "checkout-api",
+  "target_error_rate": 0.05,
+  "environment": "dev",
+  "notes": "no recent deploy, looks like a traffic spike"
+}

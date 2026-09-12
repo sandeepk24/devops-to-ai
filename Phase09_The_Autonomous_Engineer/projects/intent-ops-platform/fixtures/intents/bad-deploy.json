@@ -1,0 +1,7 @@
+{
+  "goal": "reduce_error_rate",
+  "service": "payments-api",
+  "target_error_rate": 0.03,
+  "environment": "dev",
+  "notes": "error rate jumped right after the 2pm deploy"
+}

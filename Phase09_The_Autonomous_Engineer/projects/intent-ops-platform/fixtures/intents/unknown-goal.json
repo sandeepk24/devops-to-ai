@@ -1,0 +1,7 @@
+{
+  "goal": "add_capacity_proactively",
+  "service": "payments-api",
+  "target_error_rate": 0.03,
+  "environment": "dev",
+  "notes": "goal that was never added to the allowlist"
+}

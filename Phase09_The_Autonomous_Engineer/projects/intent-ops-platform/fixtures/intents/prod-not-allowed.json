@@ -1,0 +1,7 @@
+{
+  "goal": "reduce_error_rate",
+  "service": "payments-api",
+  "target_error_rate": 0.03,
+  "environment": "prod",
+  "notes": "trying to point this straight at prod"
+}

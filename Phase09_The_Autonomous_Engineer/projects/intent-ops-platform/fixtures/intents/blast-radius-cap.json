@@ -1,0 +1,7 @@
+{
+  "goal": "reduce_error_rate",
+  "service": "inventory-api",
+  "target_error_rate": 0.05,
+  "environment": "dev",
+  "notes": "already at 10 replicas, doubling would blow past the cap"
+}

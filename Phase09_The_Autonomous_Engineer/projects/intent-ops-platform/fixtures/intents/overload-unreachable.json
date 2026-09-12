@@ -1,0 +1,7 @@
+{
+  "goal": "reduce_error_rate",
+  "service": "checkout-api",
+  "target_error_rate": 0.02,
+  "environment": "dev",
+  "notes": "same overload, but we want it very low this time"
+}
